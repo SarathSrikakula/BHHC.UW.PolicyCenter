@@ -1,0 +1,6 @@
+@BHHC.UW.PolicyCenter.API_HostAddress = http://localhost:5165
+
+GET {{BHHC.UW.PolicyCenter.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
