@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 <ItemGroup>
-  <ProjectReference Include="..\BHHC.UW.PolicyCenter.Domain\BHHC.UW.PolicyCenter.Domain.csproj" />
+  <ProjectReference Include="..\BHHC.UW.PolicyCenter.Domain\HC.UW.PolicyCenter.Domain.csproj" />
 </ItemGroup>
 <ItemGroup>
   <ProjectReference Include="..\BHHC.UW.PolicyCenter.Domain\BHHC.UW.PolicyCenter.Domain.csproj" />

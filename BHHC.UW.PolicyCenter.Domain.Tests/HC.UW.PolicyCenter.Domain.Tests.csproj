@@ -11,19 +11,21 @@
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="MediatR" Version="12.5.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="8.1.2" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BHHC.UW.PolicyCenter.Domain\BHHC.UW.PolicyCenter.Domain.csproj" />
-    <ProjectReference Include="..\BHHC.UW.PolicyCenter.Infrastructure\BHHC.UW.PolicyCenter.Infrastructure.csproj" />
+    <Using Include="Xunit" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
+    <Folder Include="V1\EntityModels\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BHHC.UW.PolicyCenter.Domain\HC.UW.PolicyCenter.Domain.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,19 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35806.99 d17.13
+VisualStudioVersion = 17.13.35806.99
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BHHC.UW.PolicyCenter.API", "BHHC.UW.PolicyCenter.API\BHHC.UW.PolicyCenter.API.csproj", "{64C52032-F79A-4775-BC0B-93D57DF101E3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HC.UW.PolicyCenter.API", "BHHC.UW.PolicyCenter.API\HC.UW.PolicyCenter.API.csproj", "{64C52032-F79A-4775-BC0B-93D57DF101E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BHHC.UW.PolicyCenter.API.Tests", "BHHC.UW.PolicyCenter.API.Tests\BHHC.UW.PolicyCenter.API.Tests.csproj", "{0B19DC2F-4904-4B14-9E06-AF8CEA2689A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HC.UW.PolicyCenter.API.Tests", "BHHC.UW.PolicyCenter.API.Tests\HC.UW.PolicyCenter.API.Tests.csproj", "{0B19DC2F-4904-4B14-9E06-AF8CEA2689A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BHHC.UW.PolicyCenter.Domain", "BHHC.UW.PolicyCenter.Domain\BHHC.UW.PolicyCenter.Domain.csproj", "{EBC6A0A9-B23E-4CBD-8859-3389EDD675F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HC.UW.PolicyCenter.Domain", "BHHC.UW.PolicyCenter.Domain\HC.UW.PolicyCenter.Domain.csproj", "{EBC6A0A9-B23E-4CBD-8859-3389EDD675F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BHHC.UW.PolicyCenter.Domain.Tests", "BHHC.UW.PolicyCenter.Domain.Tests\BHHC.UW.PolicyCenter.Domain.Tests.csproj", "{417B9657-F5D4-4EFE-A288-57A48B8C3D96}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HC.UW.PolicyCenter.Domain.Tests", "BHHC.UW.PolicyCenter.Domain.Tests\HC.UW.PolicyCenter.Domain.Tests.csproj", "{417B9657-F5D4-4EFE-A288-57A48B8C3D96}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BHHC.UW.PolicyCenter.Infrastructure", "BHHC.UW.PolicyCenter.Infrastructure\BHHC.UW.PolicyCenter.Infrastructure.csproj", "{DD8C1EAB-1304-4A41-9D1D-8C5D7A4D7022}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HC.UW.PolicyCenter.Infrastructure", "BHHC.UW.PolicyCenter.Infrastructure\HC.UW.PolicyCenter.Infrastructure.csproj", "{DD8C1EAB-1304-4A41-9D1D-8C5D7A4D7022}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BHHC.UW.PolicyCenter.Infrastructure.Tests", "BHHC.UW.PolicyCenter.Infrastructure.Tests\BHHC.UW.PolicyCenter.Infrastructure.Tests.csproj", "{BE017C1D-A43C-463D-B11D-3CBDCC10CA1A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HC.UW.PolicyCenter.Infrastructure.Tests", "BHHC.UW.PolicyCenter.Infrastructure.Tests\HC.UW.PolicyCenter.Infrastructure.Tests.csproj", "{BE017C1D-A43C-463D-B11D-3CBDCC10CA1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
