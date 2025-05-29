@@ -239,6 +239,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
                     ex,
                     nameof(GetAvailableStates)
                 );
+                //can you mock the LogCustomError in unit test case instead of calling it. in all unit test cases it is there
 
                 return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
                 {
