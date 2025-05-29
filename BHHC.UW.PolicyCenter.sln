@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35806.99 d17.13
+VisualStudioVersion = 17.13.35806.99
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BHHC.UW.PolicyCenter.API", "BHHC.UW.PolicyCenter.API\BHHC.UW.PolicyCenter.API.csproj", "{64C52032-F79A-4775-BC0B-93D57DF101E3}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BHHC.UW.PolicyCenter.Infrastructure", "BHHC.UW.PolicyCenter.Infrastructure\BHHC.UW.PolicyCenter.Infrastructure.csproj", "{DD8C1EAB-1304-4A41-9D1D-8C5D7A4D7022}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BHHC.UW.PolicyCenter.Infrastructure.Tests", "BHHC.UW.PolicyCenter.Infrastructure.Tests\BHHC.UW.PolicyCenter.Infrastructure.Tests.csproj", "{BE017C1D-A43C-463D-B11D-3CBDCC10CA1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalPlatform.Errors.Models", "DigitalPlatform.Errors.Models\DigitalPlatform.Errors.Models.csproj", "{26D2D215-6ED4-4C92-9BB8-30F1D7D2E02B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{BE017C1D-A43C-463D-B11D-3CBDCC10CA1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE017C1D-A43C-463D-B11D-3CBDCC10CA1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE017C1D-A43C-463D-B11D-3CBDCC10CA1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26D2D215-6ED4-4C92-9BB8-30F1D7D2E02B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26D2D215-6ED4-4C92-9BB8-30F1D7D2E02B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26D2D215-6ED4-4C92-9BB8-30F1D7D2E02B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26D2D215-6ED4-4C92-9BB8-30F1D7D2E02B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,11 +1,15 @@
 ﻿using AutoMapper;
 using BHHC.UW.PolicyCenter.API.PolicyCenterException;
 using BHHC.UW.PolicyCenter.API.V1.Application.Commands;
+using BHHC.UW.PolicyCenter.API.V1.Application.Models;
 using BHHC.UW.PolicyCenter.API.V1.Application.Queries;
 using BHHC.UW.PolicyCenter.API.V1.Controllers;
 using BHHC.UW.PolicyCenter.Domain.V1.Models.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -21,251 +25,242 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
     {
         private readonly Mock<IMediator> _mediatorMock;
         private readonly Mock<IMapper> _mapperMock;
+        private readonly Mock<ILogger<PolicyStatesController>> _loggerMock;
+        private readonly Mock<IConfiguration> _configurationMock;
         private readonly PolicyStatesController _controller;
 
         public PolicyStatesControllerTests()
         {
             _mediatorMock = new Mock<IMediator>();
             _mapperMock = new Mock<IMapper>();
-            _controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            _loggerMock = new Mock<ILogger<PolicyStatesController>>();
+            _configurationMock = new Mock<IConfiguration>();
+            _controller = new PolicyStatesController(
+                _mediatorMock.Object,
+                _mapperMock.Object,
+                _loggerMock.Object,
+                _configurationMock.Object
+            );
         }
 
         [Fact]
         public async Task GetPolicyStates_ReturnsOk_WithStates()
         {
-            // Arrange
-            var policyId = "POL123";
+            var policyId = "MGA1";
             var states = new List<UWStateDTO> { new UWStateDTO() };
             _mediatorMock.Setup(m => m.Send(It.IsAny<GetPolicyStatesQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(states);
 
-            // Act
             var result = await _controller.GetPolicyStates(policyId);
 
-            // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal(states, okResult.Value);
+            var response = Assert.IsType<ApiResponse<IEnumerable<UWStateDTO>>>(okResult.Value);
+            Assert.True(response.Success);
+            Assert.Equal(states, response.Result);
         }
 
         [Fact]
-        public async Task GetPolicyStates_ReturnsBadRequest_OnBusinessLogicException()
+        public async Task GetPolicyStates_ReturnsOk_WithError_WhenStatesNull()
         {
-            // Arrange
-            var policyId = "POL123";
+            var policyId = "MGA1";
             _mediatorMock.Setup(m => m.Send(It.IsAny<GetPolicyStatesQuery>(), It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new BusinessLogicException("Business error"));
+                .ReturnsAsync((IEnumerable<UWStateDTO>)null);
 
-            // Act
             var result = await _controller.GetPolicyStates(policyId);
 
-            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var response = Assert.IsType<ApiResponse<UWStateDTO>>(okResult.Value);
+            Assert.False(response.Success);
+            Assert.NotNull(response.Exception);
+        }
+
+        //[Fact]
+        //public async Task GetPolicyStates_ReturnsInternalServerError_OnSqlException()
+        //{
+        //    var policyId = "MGA1";
+        //    _mediatorMock.Setup(m => m.Send(It.IsAny<GetPolicyStatesQuery>(), It.IsAny<CancellationToken>()))
+        //        .ThrowsAsync(new SqlException());
+
+        //    var result = await _controller.GetPolicyStates(policyId);
+
+        //    var statusResult = Assert.IsType<ObjectResult>(result);
+        //    Assert.Equal((int)HttpStatusCode.InternalServerError, statusResult.StatusCode);
+        //    var response = Assert.IsType<ApiResponse<bool>>(statusResult.Value);
+        //    Assert.False(response.Success);
+        //    Assert.NotNull(response.Exception);
+        //}
+
+        [Fact]
+        public async Task GetPolicyStates_ReturnsInternalServerError_OnException()
+        {
+            var policyId = "MGA1";
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetPolicyStatesQuery>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("error"));
+
+            var result = await _controller.GetPolicyStates(policyId);
+
+            var statusResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal((int)HttpStatusCode.InternalServerError, statusResult.StatusCode);
+            var response = Assert.IsType<ApiResponse<bool>>(statusResult.Value);
+            Assert.False(response.Success);
+            Assert.NotNull(response.Exception);
+        }
+
+        [Fact]
+        public async Task UpsertPolicyState_ReturnsBadRequest_WhenModelStateInvalid()
+        {
+            _controller.ModelState.AddModelError("State", "Required");
+            var request = new UpsertPolicyStateCommandRequest();
+
+            var result = await _controller.UpsertPolicyState(request);
+
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-            var response = Assert.IsType<WebApiExceptionResponseModel>(badRequest.Value);
-            Assert.Equal(nameof(BusinessLogicException), response.ExceptionType);
+            var response = Assert.IsType<ApiResponse<bool>>(badRequest.Value);
+            Assert.False(response.Success);
+            Assert.NotNull(response.Exception);
         }
 
         [Fact]
-        public async Task GetPolicyStates_ReturnsInternalServerError_OnHandledException()
+        public async Task UpsertPolicyState_ReturnsOk_WhenSuccess()
         {
-            // Arrange
-            var policyId = "POL123";
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetPolicyStatesQuery>(), It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new HandledException("Handled error"));
-
-            // Act
-            var result = await _controller.GetPolicyStates(policyId);
-
-            // Assert
-            var objectResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal((int)HttpStatusCode.InternalServerError, objectResult.StatusCode);
-            var response = Assert.IsType<WebApiExceptionResponseModel>(objectResult.Value);
-            Assert.Equal(nameof(HandledException), response.ExceptionType);
-        }
-
-        [Fact]
-        public async Task GetPolicyStates_ReturnsInternalServerError_OnGeneralException()
-        {
-            // Arrange
-            var policyId = "POL123";
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetPolicyStatesQuery>(), It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new Exception("General error"));
-
-            // Act
-            var result = await _controller.GetPolicyStates(policyId);
-
-            // Assert
-            var objectResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal((int)HttpStatusCode.InternalServerError, objectResult.StatusCode);
-            var response = Assert.IsType<WebApiExceptionResponseModel>(objectResult.Value);
-            Assert.Equal("Exception", response.ExceptionType);
-        }
-
-        [Fact]
-        public async Task UpsertPolicyState_ReturnsOk_OnSuccess()
-        {
-            // Arrange
-            var request = new UpsertPolicyStateCommandRequest();
+            var request = new UpsertPolicyStateCommandRequest { MgaCode = "MGA1", State = "CA" };
             var command = new UpsertPolicyStateCommand();
-            var responseMessage = "Success";
             _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(request)).Returns(command);
-            _mediatorMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>())).ReturnsAsync(responseMessage);
+            _mediatorMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>())).ReturnsAsync("Success");
 
-            // Act
             var result = await _controller.UpsertPolicyState(request);
 
-            // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal(responseMessage, okResult.Value);
-        }
-
-        [Fact]
-        public async Task UpsertPolicyState_ReturnsBadRequest_OnInvalidModel()
-        {
-            // Arrange
-            var request = new UpsertPolicyStateCommandRequest();
-            _controller.ModelState.AddModelError("Test", "Invalid");
-
-            // Act
-            var result = await _controller.UpsertPolicyState(request);
-
-            // Assert
-            Assert.IsType<BadRequestObjectResult>(result);
+            var response = Assert.IsType<ApiResponse<string>>(okResult.Value);
+            Assert.True(response.Success);
+            Assert.Equal("Success", response.Result);
         }
 
         [Fact]
         public async Task UpsertPolicyState_ReturnsBadRequest_OnBusinessLogicException()
         {
-            // Arrange
-            var request = new UpsertPolicyStateCommandRequest();
+            var request = new UpsertPolicyStateCommandRequest { MgaCode = "MGA1", State = "CA" };
             var command = new UpsertPolicyStateCommand();
             _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(request)).Returns(command);
             _mediatorMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new BusinessLogicException("Business error"));
 
-            // Act
             var result = await _controller.UpsertPolicyState(request);
 
-            // Assert
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-            var response = Assert.IsType<WebApiExceptionResponseModel>(badRequest.Value);
-            Assert.Equal(nameof(BusinessLogicException), response.ExceptionType);
+            var response = Assert.IsType<ApiResponse<bool>>(badRequest.Value);
+            Assert.False(response.Success);
+            Assert.NotNull(response.Exception);
         }
 
+        //[Fact]
+        //public async Task UpsertPolicyState_ReturnsInternalServerError_OnSqlException()
+        //{
+        //    var request = new UpsertPolicyStateCommandRequest { MgaCode = "MGA1", State = "CA" };
+        //    var command = new UpsertPolicyStateCommand();
+        //    _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(request)).Returns(command);
+        //    _mediatorMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
+        //        .ThrowsAsync(new SqlException());
+
+        //    var result = await _controller.UpsertPolicyState(request);
+
+        //    var statusResult = Assert.IsType<ObjectResult>(result);
+        //    Assert.Equal((int)HttpStatusCode.InternalServerError, statusResult.StatusCode);
+        //    var response = Assert.IsType<ApiResponse<bool>>(statusResult.Value);
+        //    Assert.False(response.Success);
+        //    Assert.NotNull(response.Exception);
+        //}
+
         [Fact]
-        public async Task UpsertPolicyState_ReturnsInternalServerError_OnHandledException()
+        public async Task UpsertPolicyState_ReturnsInternalServerError_OnException()
         {
-            // Arrange
-            var request = new UpsertPolicyStateCommandRequest();
+            var request = new UpsertPolicyStateCommandRequest { MgaCode = "MGA1", State = "CA" };
             var command = new UpsertPolicyStateCommand();
             _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(request)).Returns(command);
             _mediatorMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new HandledException("Handled error"));
+                .ThrowsAsync(new Exception("error"));
 
-            // Act
             var result = await _controller.UpsertPolicyState(request);
 
-            // Assert
-            var objectResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal((int)HttpStatusCode.InternalServerError, objectResult.StatusCode);
-            var response = Assert.IsType<WebApiExceptionResponseModel>(objectResult.Value);
-            Assert.Equal(nameof(HandledException), response.ExceptionType);
+            var statusResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal((int)HttpStatusCode.InternalServerError, statusResult.StatusCode);
+            var response = Assert.IsType<ApiResponse<bool>>(statusResult.Value);
+            Assert.False(response.Success);
+            Assert.NotNull(response.Exception);
         }
 
         [Fact]
-        public async Task UpsertPolicyState_ReturnsInternalServerError_OnGeneralException()
+        public async Task GetAvailableStates_ReturnsBadRequest_WhenMgaCodeMissing()
         {
-            // Arrange
-            var request = new UpsertPolicyStateCommandRequest
-            {
-                MgaCode = "MGA001",
-                StateBeginDate = DateTime.UtcNow,
-                StateTin = "TIN12345",
-                RiskId = "RISK001",
-                State = "CA"
-            };
-            var command = new UpsertPolicyStateCommand();
-            _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(request)).Returns(command);
-            _mediatorMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new Exception("General error"));
+            var result = await _controller.GetAvailableStates("");
 
-            // Act
-            var result = await _controller.UpsertPolicyState(request);
-
-            // Assert
-            var objectResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal((int)HttpStatusCode.InternalServerError, objectResult.StatusCode);
-            var response = Assert.IsType<WebApiExceptionResponseModel>(objectResult.Value);
-            Assert.Equal("Exception", response.ExceptionType);
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            var response = Assert.IsType<ApiResponse<bool>>(badRequest.Value);
+            Assert.False(response.Success);
+            Assert.NotNull(response.Exception);
         }
 
         [Fact]
         public async Task GetAvailableStates_ReturnsOk_WithStates()
         {
-            // Arrange
-            var mgacode = "MGA123";
+            var mgacode = "MGA1";
             var states = new List<ReferenceStateDTO> { new ReferenceStateDTO() };
             _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(states);
 
-            // Act
             var result = await _controller.GetAvailableStates(mgacode);
 
-            // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal(states, okResult.Value);
+            var response = Assert.IsType<ApiResponse<IEnumerable<ReferenceStateDTO>>>(okResult.Value);
+            Assert.True(response.Success);
+            Assert.Equal(states, response.Result);
         }
 
         [Fact]
-        public async Task GetAvailableStates_ReturnsBadRequest_OnBusinessLogicException()
+        public async Task GetAvailableStates_ReturnsOk_WithError_WhenStatesNull()
         {
-            // Arrange
-            var mgacode = "MGA123";
+            var mgacode = "MGA1";
             _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new BusinessLogicException("Business error"));
+                .ReturnsAsync((IEnumerable<ReferenceStateDTO>)null);
 
-            // Act
             var result = await _controller.GetAvailableStates(mgacode);
 
-            // Assert
-            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-            var response = Assert.IsType<WebApiExceptionResponseModel>(badRequest.Value);
-            Assert.Equal(nameof(BusinessLogicException), response.ExceptionType);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var response = Assert.IsType<ApiResponse<ReferenceStateDTO>>(okResult.Value);
+            Assert.False(response.Success);
+            Assert.NotNull(response.Exception);
         }
 
-        [Fact]
-        public async Task GetAvailableStates_ReturnsInternalServerError_OnHandledException()
-        {
-            // Arrange
-            var mgacode = "MGA123";
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new HandledException("Handled error"));
+        //[Fact]
+        //public async Task GetAvailableStates_ReturnsInternalServerError_OnSqlException()
+        //{
+        //    var mgacode = "MGA1";
+        //    _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), It.IsAny<CancellationToken>()))
+        //        .ThrowsAsync(new SqlException());
 
-            // Act
-            var result = await _controller.GetAvailableStates(mgacode);
+        //    var result = await _controller.GetAvailableStates(mgacode);
 
-            // Assert
-            var objectResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal((int)HttpStatusCode.InternalServerError, objectResult.StatusCode);
-            var response = Assert.IsType<WebApiExceptionResponseModel>(objectResult.Value);
-            Assert.Equal(nameof(HandledException), response.ExceptionType);
-        }
+        //    var statusResult = Assert.IsType<ObjectResult>(result);
+        //    Assert.Equal((int)HttpStatusCode.InternalServerError, statusResult.StatusCode);
+        //    var response = Assert.IsType<ApiResponse<bool>>(statusResult.Value);
+        //    Assert.False(response.Success);
+        //    Assert.NotNull(response.Exception);
+        //}
 
         [Fact]
-        public async Task GetAvailableStates_ReturnsInternalServerError_OnGeneralException()
+        public async Task GetAvailableStates_ReturnsInternalServerError_OnException()
         {
-            // Arrange
-            var mgacode = "MGA123";
+            var mgacode = "MGA1";
             _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new Exception("General error"));
+                .ThrowsAsync(new Exception("error"));
 
-            // Act
             var result = await _controller.GetAvailableStates(mgacode);
 
-            // Assert
-            var objectResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal((int)HttpStatusCode.InternalServerError, objectResult.StatusCode);
-            var response = Assert.IsType<WebApiExceptionResponseModel>(objectResult.Value);
-            Assert.Equal("Exception", response.ExceptionType);
+            var statusResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal((int)HttpStatusCode.InternalServerError, statusResult.StatusCode);
+            var response = Assert.IsType<ApiResponse<bool>>(statusResult.Value);
+            Assert.False(response.Success);
+            Assert.NotNull(response.Exception);
         }
     }
 }

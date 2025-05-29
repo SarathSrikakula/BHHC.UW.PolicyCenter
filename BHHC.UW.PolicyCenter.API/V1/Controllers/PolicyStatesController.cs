@@ -1,12 +1,19 @@
 ﻿using AutoMapper;
 using BHHC.UW.PolicyCenter.API.PolicyCenterException;
 using BHHC.UW.PolicyCenter.API.V1.Application.Commands;
+using BHHC.UW.PolicyCenter.API.V1.Application.Models;
 using BHHC.UW.PolicyCenter.API.V1.Application.Queries;
 using BHHC.UW.PolicyCenter.Domain.V1.Models.DTOs;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using System.Net;
 using static BHHC.UW.PolicyCenter.API.PolicyCenterException.HandledException;
+using Microsoft.Extensions.Logging;
+using DigitalPlatform.Errors.Models.Models;
+using DigitalPlatform.Errors.Models.Extension;
 
 namespace BHHC.UW.PolicyCenter.API.V1.Controllers
 {
@@ -16,70 +23,95 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
     {
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
+        private readonly ILogger<PolicyStatesController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public PolicyStatesController(IMediator mediator, IMapper mapper)
+        public PolicyStatesController(IMediator mediator, IMapper mapper, ILogger<PolicyStatesController> logger, IConfiguration configuration)
         {
             _mediator = mediator;
             _mapper = mapper;
+            _logger = logger;
+            _configuration = configuration;
         }
 
-        /// <summary>
-        /// Retrieves all states associated with a specific policy.
-        /// </summary>
-        /// <param name="policyId">The ID of the policy.</param>
-        /// <returns>A list of policy-linked states.</returns>
+
+        // Updated GetPolicyStates method to match the latest API response format
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<UWStateDTO>), 200)]
-        [ProducesResponseType(typeof(WebApiExceptionResponseModel), 400)]
-        [ProducesResponseType(typeof(WebApiExceptionResponseModel), (int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> GetPolicyStates(string policyId)
         {
             try
             {
                 var query = new GetPolicyStatesQuery { MgaCode = policyId };
                 var states = await _mediator.Send(query);
-                return Ok(states);
-            }
-            catch (BusinessLogicException ex)
-            {
-                return BadRequest(new WebApiExceptionResponseModel
+
+                if (states == null)
                 {
-                    ExceptionType = nameof(BusinessLogicException),
-                    ExceptionMessage = ex.Message,
-                });
-            }
-            catch (HandledException ex)
-            {
-                return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
+       
+                    var errorMessage = _logger.LogCustomError(
+                        new CustomError(_configuration, GlobalErrorCategory.Database, "4010", true),
+                        LogLevel.Warning,
+                        new Exception("Policy states not found."),
+                        nameof(GetPolicyStates)
+                    );
+
+                    return Ok(new ApiResponse<UWStateDTO>
+                    {
+                        Success = false,
+                        Exception = new ApiException(exception: new Exception(errorMessage))
+                    });
+                }
+
+                var response = new ApiResponse<IEnumerable<UWStateDTO>>
                 {
-                    ExceptionType = nameof(HandledException),
-                    ExceptionMessage = ex.Message,
+                    Success = true,
+                    Result = states
+                };
+
+                return Ok(response);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogCustomError(
+                    new CustomError(_configuration, GlobalErrorCategory.Database, "1005", false),
+                    LogLevel.Error,
+                    ex,
+                    nameof(GetPolicyStates)
+                );
+
+                return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
+                {
+                    Success = false,
+                    Exception = new ApiException(exception: ex)
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
+                _logger.LogCustomError(
+                    new CustomError(_configuration, GlobalErrorCategory.Unhandled, "1006", false),
+                    LogLevel.Error,
+                    ex,
+                    nameof(GetPolicyStates)
+                );
+
+                return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
                 {
-                    ExceptionType = ex.GetType().Name,
-                    ExceptionMessage = "An unexpected error occurred. Please try again later.",
+                    Success = false,
+                    Exception = new ApiException(exception: ex)
                 });
             }
         }
 
-        /// <summary>
-        /// Adds or updates a state for a specific policy.
-        /// </summary>
-        /// <param name="request">The state data to add or update.</param>
-        /// <returns>A message indicating the result of the operation.</returns>
+        // Updated UpsertPolicyState method to match the latest API response format
         [HttpPost]
-        [ProducesResponseType(typeof(string), 200)]
-        [ProducesResponseType(typeof(WebApiExceptionResponseModel), 400)]
-        [ProducesResponseType(typeof(WebApiExceptionResponseModel), (int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> UpsertPolicyState([FromBody] UpsertPolicyStateCommandRequest request)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Exception = new ApiException(exception: new Exception("Invalid model state."))
+                });
             }
 
             var command = _mapper.Map<UpsertPolicyStateCommand>(request);
@@ -87,51 +119,71 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
             try
             {
                 var rMessage = await _mediator.Send(command);
-                return Ok(rMessage);
+                var response = new ApiResponse<string>
+                {
+                    Success = true,
+                    Result = rMessage
+                };
+                return Ok(response);
             }
             catch (BusinessLogicException ex)
             {
-                return BadRequest(new WebApiExceptionResponseModel
+                //please add LogCustomError
+                _logger.LogCustomError(
+                    new CustomError(_configuration, GlobalErrorCategory.Business, "4001", false),
+                    LogLevel.Warning,
+                    ex,
+                    nameof(UpsertPolicyState)
+                );
+
+                return BadRequest(new ApiResponse<bool>
                 {
-                    ExceptionType = nameof(BusinessLogicException),
-                    ExceptionMessage = ex.Message,
+                    Success = false,
+                    Exception = new ApiException(exception: ex)
                 });
             }
-            catch (HandledException ex)
+            catch (SqlException ex)
             {
-                return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
+                _logger.LogCustomError(
+                    new CustomError(_configuration, GlobalErrorCategory.Database, "1005", false),
+                    LogLevel.Error,
+                    ex,
+                    nameof(UpsertPolicyState)
+                );
+
+                return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
                 {
-                    ExceptionType = nameof(HandledException),
-                    ExceptionMessage = ex.Message,
+                    Success = false,
+                    Exception = new ApiException(exception: ex)
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
+                _logger.LogCustomError(
+                    new CustomError(_configuration, GlobalErrorCategory.Unhandled, "1006", false),
+                    LogLevel.Error,
+                    ex,
+                    nameof(UpsertPolicyState)
+                );
+
+                return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
                 {
-                    ExceptionType = ex.GetType().Name,
-                    ExceptionMessage = "An unexpected error occurred while saving state data.",
+                    Success = false,
+                    Exception = new ApiException(exception: ex)
                 });
             }
         }
 
-        /// <summary>
-        /// Retrieves a list of all available states for dropdowns based on policy-related data.
-        /// </summary>
-        /// <param name="mgacode">The MgaCode (Policy ID) to filter available states.</param>
-        /// <returns>A list of available states.</returns>
+        // Updated GetAvailableStates method to match the latest API response format
         [HttpGet("available")]
-        [ProducesResponseType(typeof(IEnumerable<ReferenceStateDTO>), 200)]
-        [ProducesResponseType(typeof(WebApiExceptionResponseModel), 400)]
-        [ProducesResponseType(typeof(WebApiExceptionResponseModel), (int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> GetAvailableStates([FromQuery] string mgacode)
         {
             if (string.IsNullOrWhiteSpace(mgacode))
             {
-                return BadRequest(new WebApiExceptionResponseModel
+                return BadRequest(new ApiResponse<bool>
                 {
-                    ExceptionType = nameof(BusinessLogicException),
-                    ExceptionMessage = "MgaCode is required to retrieve available states.",
+                    Success = false,
+                    Exception = new ApiException(exception: new Exception("MgaCode is required to retrieve available states."))
                 });
             }
 
@@ -139,32 +191,62 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
             {
                 var query = new GetAvailableStatesQuery { MgaCode = mgacode };
                 var states = await _mediator.Send(query);
-                return Ok(states);
-            }
-            catch (BusinessLogicException ex)
-            {
-                return BadRequest(new WebApiExceptionResponseModel
+
+                if (states == null)
                 {
-                    ExceptionType = nameof(BusinessLogicException),
-                    ExceptionMessage = ex.Message,
-                });
-            }
-            catch (HandledException ex)
-            {
-                return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
+                    var errorMessage = _logger.LogCustomError(
+                        new CustomError(_configuration, GlobalErrorCategory.Database, "4011", true),
+                        LogLevel.Warning,
+                        new Exception("Available states not found."),
+                        nameof(GetAvailableStates)
+                    );
+
+                    return Ok(new ApiResponse<ReferenceStateDTO>
+                    {
+                        Success = false,
+                        Exception = new ApiException(exception: new Exception(errorMessage))
+                    });
+                }
+
+                var response = new ApiResponse<IEnumerable<ReferenceStateDTO>>
                 {
-                    ExceptionType = nameof(HandledException),
-                    ExceptionMessage = ex.Message,
+                    Success = true,
+                    Result = states
+                };
+
+                return Ok(response);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogCustomError(
+                    new CustomError(_configuration, GlobalErrorCategory.Database, "1005", false),
+                    LogLevel.Error,
+                    ex,
+                    nameof(GetAvailableStates)
+                );
+
+                return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
+                {
+                    Success = false,
+                    Exception = new ApiException(exception: ex)
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
+                _logger.LogCustomError(
+                    new CustomError(_configuration, GlobalErrorCategory.Unhandled, "1006", false),
+                    LogLevel.Error,
+                    ex,
+                    nameof(GetAvailableStates)
+                );
+
+                return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
                 {
-                    ExceptionType = ex.GetType().Name,
-                    ExceptionMessage = "An unexpected error occurred while retrieving available states.",
+                    Success = false,
+                    Exception = new ApiException(exception: ex)
                 });
             }
         }
+        //As we have totally changed the PolicyStatesController, we need to update the unit tests totally 
     }
 }
