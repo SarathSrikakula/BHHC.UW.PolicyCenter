@@ -11,9 +11,9 @@ namespace BHHC.UW.PolicyCenter.Domain.V1.EntityModels
     {
         public string MgaCode { get; set; }
         public string State { get; set; }
-        public string StateName { get; set; }
-        public DateTime? BeginDate { get; set; }
-        public string? StateTin { get; set; }
+        public string Stateabb { get; set; }
+        public DateTime? STBEGIN { get; set; }
+        public string? ST_Tin { get; set; }
         public string? RiskId { get; set; }
     }
 }

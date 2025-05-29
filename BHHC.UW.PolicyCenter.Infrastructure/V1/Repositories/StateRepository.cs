@@ -33,21 +33,14 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
                 parameters.Add("@mgacode", mgaCode, DbType.AnsiString, size: 10);
                 parameters.Add("@excludeOffPolicy", 'Y', DbType.AnsiString, size: 1);
 
-                var results = await _dbConnection.QueryAsync<dynamic>(
+                var results = await _dbConnection.QueryAsync<UWStateEntity>(
                     "up_uw_listpolicyRatingStates",
                     parameters,
                     commandType: CommandType.StoredProcedure
                 );
 
-                return results.Select(r => new UWStateEntity
-                {
-                    MgaCode = mgaCode,
-                    StateName = r.stateName,
-                    State = r.stateabb,
-                    BeginDate = Convert.ToDateTime(r.STBEGIN),
-                    StateTin = r.ST_Tin,
-                    RiskId = r.RiskID
-                }).ToList();
+                //instead of the above commented code please use the create the model with sql params and use it.
+                return results;
             }
             catch (SqlException ex)
             {
@@ -60,7 +53,7 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
                 throw;
             }
         }
-
+        //can you  write unit test case for above code
         public async Task<IEnumerable<ReferenceStateDTO>> GetAllAvailableStatesAsync(string mgacode)
         {
             try
@@ -112,11 +105,6 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
                 var query = "select distinct names, vals from @hasRates";
                 return await _dbConnection.QueryAsync<ReferenceStateDTO>(query);
             }
-            catch (SqlException ex)
-            {
-                _logger.LogError(ex, "Database error in GetAllAvailableStatesAsync for dropdown, MgaCode: {MgaCode}", mgacode);
-                throw;
-            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An unexpected error occurred in GetAllAvailableStatesAsync for dropdown, MgaCode: {MgaCode}", mgacode);
@@ -129,23 +117,24 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
             try
             {
                 _logger.LogInformation("Executing query to retrieve ResetRating for Policy: {MgaCode}", uwStateEntity.MgaCode);
+                
+                //please convert the above code to dynamic parameters style
+                var resetRatingParameters = new DynamicParameters();
+                resetRatingParameters.Add("@MGACode", uwStateEntity.MgaCode, DbType.AnsiString, size: 10);
+
                 var resetRatingQuerySql = @"
                     SELECT CAST(1 AS BIT) AS IsReset;
                 ";
                 var resetRatingResult = await _dbConnection.QuerySingleOrDefaultAsync<bool>(
                     resetRatingQuerySql,
-                    new
-                    {
-                        // Pass relevant parameters for this query, e.g., uwStateEntity.MgaCode
-                    }
+                    resetRatingParameters
                 );
-
                 var parameters = new DynamicParameters();
                 parameters.Add("@mgacode", uwStateEntity.MgaCode, DbType.AnsiString, size: 10);
                 parameters.Add("@State", uwStateEntity.State, DbType.AnsiString, size: 2);
-                parameters.Add("@stbegin", uwStateEntity.BeginDate, DbType.DateTime);
+                parameters.Add("@stbegin", uwStateEntity.STBEGIN, DbType.DateTime);
                 parameters.Add("@stexpir", null, DbType.DateTime);
-                parameters.Add("@st_tin", uwStateEntity.StateTin, DbType.AnsiString, size: 12);
+                parameters.Add("@st_tin", uwStateEntity.ST_Tin, DbType.AnsiString, size: 12);
                 parameters.Add("@RiskID", uwStateEntity.RiskId, DbType.AnsiString, size: 15);
                 parameters.Add("@ResetRating", resetRatingResult, DbType.AnsiStringFixedLength, size: 1);
                 parameters.Add("@takeout", null, DbType.AnsiString, size: 10);
@@ -162,11 +151,6 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Database error in UpsertPolicyStateAsync for MgaCode: {MgaCode}, State: {State}", uwStateEntity.MgaCode, uwStateEntity.State);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An unexpected error occurred in UpsertPolicyStateAsync for MgaCode: {MgaCode}, State: {State}", uwStateEntity.MgaCode, uwStateEntity.State);
                 throw;
             }
         }

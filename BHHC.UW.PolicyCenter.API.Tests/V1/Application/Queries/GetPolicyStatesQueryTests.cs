@@ -35,8 +35,8 @@ namespace BHHC.UW.PolicyCenter.API.V1.Application.Queries
                 var query = new GetPolicyStatesQuery { MgaCode = mgaCode };
                 var entityStates = new List<UWStateEntity>
                     {
-                        new UWStateEntity { MgaCode = "TX", State = "Texas", StateName = "Texas" },
-                        new UWStateEntity { MgaCode = "TX", State = "California", StateName = "California" }
+                        new UWStateEntity { MgaCode = "TX", State = "Texas", Stateabb = "Texas" },
+                        new UWStateEntity { MgaCode = "TX", State = "California", Stateabb = "California" }
                     };
 
                 var dtoStates = new List<UWStateDTO>

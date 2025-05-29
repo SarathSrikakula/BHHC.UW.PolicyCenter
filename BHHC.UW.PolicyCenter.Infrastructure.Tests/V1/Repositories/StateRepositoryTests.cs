@@ -4,7 +4,14 @@ using BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Moq.Dapper;
+using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Linq;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace BHHC.UW.PolicyCenter.Infrastructure.Tests.V1.Repositories
 {
@@ -21,82 +28,131 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.Tests.V1.Repositories
             _repository = new StateRepository(_dbConnectionMock.Object, _loggerMock.Object);
         }
 
-        //can we mock static
         [Fact]
         public async Task GetPolicyStatesAsync_ReturnsMappedEntities()
         {
             // Arrange
             var mgaCode = "MGATEST";
+            var parameters = new DynamicParameters();
+            parameters.Add("@mgacode", mgaCode, DbType.AnsiString, size: 10);
+            parameters.Add("@excludeOffPolicy", 'Y', DbType.AnsiString, size: 1);
             var dapperResult = new List<dynamic>
+            {
+                new { stateName = "California", stateabb = "CA", STBEGIN = DateTime.Today, ST_Tin = "TIN1", RiskID = "R1" },
+                new { stateName = "Nevada", stateabb = "NV", STBEGIN = DateTime.Today.AddDays(-1), ST_Tin = "TIN2", RiskID = "R2" }
+            };
+            var uwStateEntity = new List<UWStateEntity>
+            {
+                new UWStateEntity
                 {
-                    new TestDynamic { stateName = "California", stateabb = "CA", STBEGIN = DateTime.Parse("2024-01-01"), ST_Tin = "TIN123", RiskID = "RISK1" }
-                };
+                    MgaCode = mgaCode,
+                    State = "CA",
+                    Stateabb = "California",
+                    STBEGIN = DateTime.Today,
+                    ST_Tin = "TIN1",
+                    RiskId = "R1"
+                },
+                new UWStateEntity
+                {
+                    MgaCode = mgaCode,
+                    State = "NV",
+                    Stateabb = "Nevada",
+                    STBEGIN = DateTime.Today.AddDays(-1),
+                    ST_Tin = "TIN2",
+                    RiskId = "R2"
+                }
+            };
 
-            var commandMock = new Mock<IDbCommand>();
-            var readerMock = new Mock<IDataReader>();
-            var paramMock = new Mock<IDataParameterCollection>();
+            _dbConnectionMock.SetupDapperAsync(c => c.QueryAsync<UWStateEntity>(
+                "up_uw_listpolicyRatingStates",
+                parameters,
+                null,
+                null,
+                CommandType.StoredProcedure
+            )).ReturnsAsync(uwStateEntity);
 
-            _dbConnectionMock.Setup(x => x.CreateCommand()).Returns(commandMock.Object);
-            _dbConnectionMock.Setup(x => x.State).Returns(ConnectionState.Open);
 
-            //Assert
-            await Assert.ThrowsAnyAsync<Exception>(() => _repository.GetPolicyStatesAsync(mgaCode));
+            // Act
+            var result = await _repository.GetPolicyStatesAsync(mgaCode);
+
+            // Assert
+            Assert.NotNull(result);
+            var list = result.ToList();
+            Assert.Equal(2, list.Count);
+            Assert.Equal("CA", list[0].State);
+            Assert.Equal("California", list[0].Stateabb);
+            Assert.Equal("NV", list[1].State);
+            Assert.Equal("Nevada", list[1].Stateabb);
         }
 
         [Fact]
-        public async Task GetAllAvailableStatesAsync_ThrowsBusinessLogicException_WhenTranCodeMissing()
+        public async Task GetAllAvailableStatesAsync_ReturnsReferenceStates()
         {
             // Arrange
             var mgacode = "MGATEST";
+            _dbConnectionMock.SetupDapperAsync(c => c.QueryFirstOrDefaultAsync<string>(
+                It.Is<string>(q => q.Contains("fn_Policy_GetLob")), It.IsAny<object>(), null, null, null)).ReturnsAsync("WC");
 
-            await Assert.ThrowsAnyAsync<Exception>(() => _repository.GetAllAvailableStatesAsync(mgacode));
+            _dbConnectionMock.SetupDapperAsync(c => c.QueryFirstOrDefaultAsync<string>(
+                It.Is<string>(q => q.Contains("CASE WHEN @LOB")), It.IsAny<object>(), null, null, null)).ReturnsAsync("C");
+
+            _dbConnectionMock.SetupDapperAsync(c => c.QueryFirstOrDefaultAsync<string>(
+                It.Is<string>(q => q.Contains("fn_uw_op_getTransactionMGACode")), It.IsAny<object>(), null, null, null)).ReturnsAsync("TXN1");
+
+            _dbConnectionMock.SetupDapperAsync(c => c.QueryFirstOrDefaultAsync<(string, string, string)>(
+                It.Is<string>(q => q.Contains("FROM insured")), It.IsAny<object>(), null, null, null))
+                .ReturnsAsync(("Carrier1", "Agency1", "01/01/2024"));
+
+            var expectedStates = new List<ReferenceStateDTO>
+            {
+                new ReferenceStateDTO { State = "CA", StateName = "California" },
+                new ReferenceStateDTO { State = "NV", StateName = "Nevada" }
+            };
+
+            _dbConnectionMock.SetupDapperAsync(c => c.QueryAsync<ReferenceStateDTO>(
+                It.IsAny<string>(), null, null, null, null)).ReturnsAsync(expectedStates);
+
+            // Act
+            var result = await _repository.GetAllAvailableStatesAsync(mgacode);
+
+            // Assert
+            Assert.NotNull(result);
+            var list = result.ToList();
+            Assert.Equal(2, list.Count);
+            Assert.Equal("CA", list[0].State);
+            Assert.Equal("Nevada", list[1].StateName);
         }
 
         [Fact]
-        public async Task UpsertPolicyStateAsync_ThrowsException_WhenDbFails()
+        public async Task UpsertPolicyStateAsync_ReturnsRMessage()
         {
+            
             // Arrange
+           
             var uwStateEntity = new UWStateEntity
             {
                 MgaCode = "MGATEST",
                 State = "CA",
-                BeginDate = DateTime.Parse("2024-01-01"),
-                StateTin = "TIN123",
-                RiskId = "RISK1"
+                STBEGIN = DateTime.UtcNow,
+                ST_Tin = "TIN123",
+                RiskId = "RISK001"
             };
 
-            await Assert.ThrowsAnyAsync<Exception>(() => _repository.UpsertPolicyStateAsync(uwStateEntity));
-            
-        }
-
-        [Fact]
-        public async Task GetPolicyStatesAsync_ReturnsExpectedEntities()
-        {
-            // Arrange
-            var mgaCode = "MGATEST";
-            var expected = new List<UWStateEntity>
-                {
-                    new UWStateEntity { MgaCode = "MGATEST", State = "CA", BeginDate = System.DateTime.Parse("2024-01-01"), StateTin = "TIN123", RiskId = "RISK1" }
-                };
-            var repoMock = new Mock<IStateRepository>();
-            repoMock.Setup(r => r.GetPolicyStatesAsync(mgaCode)).ReturnsAsync(expected);
+            var resetRatingParameters = new DynamicParameters();
+            resetRatingParameters.Add("@MGACode", "MGATEST", DbType.AnsiString, size: 10);
+            _dbConnectionMock
+                .SetupDapperAsync(c => c.QuerySingleOrDefaultAsync<bool>(
+                    It.Is<string>(q => q.Contains("IsReset")),
+                    resetRatingParameters,
+                    null, null, null))
+                .ReturnsAsync(true);
+            var expectedMessage = "Success";
 
             // Act
-            var result = await repoMock.Object.GetPolicyStatesAsync(mgaCode);
+            var result = await _repository.UpsertPolicyStateAsync(uwStateEntity);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Single(result);
-            Assert.Equal("CA", ((List<UWStateEntity>)result)[0].State);
-        }
-
-        private class TestDynamic
-        {
-            public string stateName { get; set; }
-            public string stateabb { get; set; }
-            public DateTime STBEGIN { get; set; }
-            public string ST_Tin { get; set; }
-            public string RiskID { get; set; }
+            Assert.Null(result);
         }
     }
 }

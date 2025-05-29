@@ -10,6 +10,8 @@
     <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="MediatR" Version="12.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
+    <PackageReference Include="Moq.Dapper" Version="1.0.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="8.1.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="8.1.2" />
   </ItemGroup>
