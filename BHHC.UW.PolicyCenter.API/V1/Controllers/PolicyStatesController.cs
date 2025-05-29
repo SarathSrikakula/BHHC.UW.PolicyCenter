@@ -18,7 +18,7 @@ using DigitalPlatform.Errors.Models.Extension;
 namespace BHHC.UW.PolicyCenter.API.V1.Controllers
 {
     [ApiController]
-    [Route("api/policies/{policyId}/states")]
+    [Route("api/policy")]
     public class PolicyStatesController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -36,7 +36,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
 
 
         // Updated GetPolicyStates method to match the latest API response format
-        [HttpGet]
+        [HttpGet("{policyId}/states")]
         public async Task<IActionResult> GetPolicyStates(string policyId)
         {
             try
@@ -102,7 +102,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
         }
 
         // Updated UpsertPolicyState method to match the latest API response format
-        [HttpPost]
+        [HttpPost("states")]
         public async Task<IActionResult> UpsertPolicyState([FromBody] UpsertPolicyStateCommandRequest request)
         {
             if (!ModelState.IsValid)
