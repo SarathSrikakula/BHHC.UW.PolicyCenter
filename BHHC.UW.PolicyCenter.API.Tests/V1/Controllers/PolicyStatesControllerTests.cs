@@ -175,7 +175,14 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
         public async Task UpsertPolicyState_ReturnsInternalServerError_OnGeneralException()
         {
             // Arrange
-            var request = new UpsertPolicyStateCommandRequest();
+            var request = new UpsertPolicyStateCommandRequest
+            {
+                MgaCode = "MGA001",
+                StateBeginDate = DateTime.UtcNow,
+                StateTin = "TIN12345",
+                RiskId = "RISK001",
+                State = "CA"
+            };
             var command = new UpsertPolicyStateCommand();
             _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(request)).Returns(command);
             _mediatorMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))

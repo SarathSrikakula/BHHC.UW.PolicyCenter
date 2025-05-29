@@ -29,7 +29,15 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Application.Commands
         public async Task Handle_ShouldReturnRepositoryMessage_WhenUpsertSucceeds()
         {
             // Arrange
-            var command = new UpsertPolicyStateCommand { MgaCode = "MGA1", State = "TX" };
+            var command = new UpsertPolicyStateCommand
+            {
+                MgaCode = "MGA1",
+                State = "TX",
+                StateBeginDate = new DateTime(2024, 1, 1),
+                StateTin = "TIN123",
+                RiskId = "RISK001"
+            };
+            //please write all fields in above object
             var uwStateEntity = new UWStateEntity();
             var expectedMessage = "Success";
 

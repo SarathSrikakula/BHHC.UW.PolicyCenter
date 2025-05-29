@@ -18,6 +18,8 @@ namespace BHHC.UW.PolicyCenter.API.V1.Mappings
 
             // Entity to DTO mapping (for returning from repository via handler to controller)
             CreateMap<UWStateEntity, UWStateDTO>();
+
+            // DTO to Entity mapping (if needed for other operations)
         }
     }
 }
