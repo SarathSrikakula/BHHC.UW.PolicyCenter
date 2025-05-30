@@ -30,12 +30,12 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
         /// </summary>
         /// <param name="policyId">The ID of the policy.</param>
         /// <returns>A list of policy-linked states.</returns>
-        [HttpGet("{policyid}/states")]
+        [HttpGet("policystates")]
         [ProducesResponseType(typeof(IEnumerable<UWStateDTO>), 200)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), 400)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), (int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> GetPolicyStates(
-            string policyId,
+            [FromQuery] string policyId,
             [FromServices] IValidator<GetPolicyStatesQuery> validator)
         {
             try
@@ -143,7 +143,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
         /// </summary>
         /// <param name="mgacode">The MgaCode (Policy ID) to filter available states.</param>
         /// <returns>A list of available states.</returns>
-        [HttpGet("{policyId}/statesavailable")]
+        [HttpGet("availablestates")]
         [ProducesResponseType(typeof(IEnumerable<ReferenceStateDTO>), 200)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), 400)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), (int)HttpStatusCode.InternalServerError)]
@@ -172,7 +172,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
                     ExceptionMessage = ex.Message,
                 });
             }
-           
+
             catch (Exception ex)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
@@ -184,3 +184,71 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
         }
     }
 }
+//[HttpGet]
+//[Route("GetPolicyHeaderInfo")]
+//public async Task<IActionResult> GetPolicyHeaderInfo(string policyCode)
+//{
+//    if (string.IsNullOrWhiteSpace(policyCode))
+//        return BadRequest("Invalid policy code");
+
+//    try
+//    {
+//        var policy = await _policyCenterServiceClient.GetPolicyDetail(policyCode);
+//        return Ok(policy); // or Json(policy), depending on your return type
+//    }
+//    catch (Exception ex)
+//    {
+//        _logger.LogError(ex, "Error while fetching policy details.");
+//        return StatusCode(500, "Internal server error");
+//    }
+//}
+//above is GetPolicyHeaderInfo is the eg for which we need 3 similar controller methods for the following methods of our current class, GetPolicyHeaderInfo generally will use client to call our controller class methods.
+//please remeber i want the format as it is of GetPolicyHeaderInfo
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//public async Task<ApiResponse<List<PolicyDTO>>> GetPolicyDetail(string policyCode)
+//{
+//    try
+//    {
+//        // Assuming you don’t need scopes for localhost/testing
+//        var response = await GetAsync<ApiResponse<List<PolicyDTO>>>(_policyDetailURL + policyCode, null);
+//        return response;
+//    }
+//    catch (Exception ex)
+//    {
+//        _logger.LogError(ex, $"{nameof(GetPolicyDetail)} failed.");
+//        throw;
+//    }
+//}
+//

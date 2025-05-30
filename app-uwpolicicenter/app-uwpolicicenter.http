@@ -1,0 +1,6 @@
+@app_uwpolicicenter_HostAddress = http://localhost:5238
+
+GET {{app_uwpolicicenter_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
