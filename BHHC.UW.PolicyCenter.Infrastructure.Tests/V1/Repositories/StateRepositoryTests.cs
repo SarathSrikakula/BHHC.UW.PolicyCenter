@@ -47,7 +47,7 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.Tests.V1.Repositories
                 {
                     MgaCode = mgaCode,
                     State = "CA",
-                    Stateabb = "California",
+                    StateName = "California",
                     STBEGIN = DateTime.Today,
                     ST_Tin = "TIN1",
                     RiskId = "R1"
@@ -56,7 +56,7 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.Tests.V1.Repositories
                 {
                     MgaCode = mgaCode,
                     State = "NV",
-                    Stateabb = "Nevada",
+                    StateName = "Nevada",
                     STBEGIN = DateTime.Today.AddDays(-1),
                     ST_Tin = "TIN2",
                     RiskId = "R2"
@@ -80,9 +80,9 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.Tests.V1.Repositories
             var list = result.ToList();
             Assert.Equal(2, list.Count);
             Assert.Equal("CA", list[0].State);
-            Assert.Equal("California", list[0].Stateabb);
+            Assert.Equal("California", list[0].StateName);
             Assert.Equal("NV", list[1].State);
-            Assert.Equal("Nevada", list[1].Stateabb);
+            Assert.Equal("Nevada", list[1].StateName);
         }
 
         [Fact]
