@@ -11,7 +11,7 @@ using static BHHC.UW.PolicyCenter.API.PolicyCenterException.HandledException;
 namespace BHHC.UW.PolicyCenter.API.V1.Controllers
 {
     [ApiController]
-    [Route("api/policies/{policyId}/states")]
+    [Route("api/policy")]
     public class PolicyStatesController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -28,7 +28,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
         /// </summary>
         /// <param name="policyId">The ID of the policy.</param>
         /// <returns>A list of policy-linked states.</returns>
-        [HttpGet]
+        [HttpGet("{policyid}/states")]
         [ProducesResponseType(typeof(IEnumerable<UWStateDTO>), 200)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), 400)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), (int)HttpStatusCode.InternalServerError)]
@@ -71,7 +71,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
         /// </summary>
         /// <param name="request">The state data to add or update.</param>
         /// <returns>A message indicating the result of the operation.</returns>
-        [HttpPost]
+        [HttpPost("states")]
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), 400)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), (int)HttpStatusCode.InternalServerError)]
@@ -120,7 +120,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
         /// </summary>
         /// <param name="mgacode">The MgaCode (Policy ID) to filter available states.</param>
         /// <returns>A list of available states.</returns>
-        [HttpGet("available")]
+        [HttpGet("{policyid}/statesavailable")]
         [ProducesResponseType(typeof(IEnumerable<ReferenceStateDTO>), 200)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), 400)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), (int)HttpStatusCode.InternalServerError)]

@@ -23,6 +23,13 @@
   <ItemGroup>
     <ProjectReference Include="..\BHHC.UW.PolicyCenter.Domain\BHHC.UW.PolicyCenter.Domain.csproj" />
     <ProjectReference Include="..\BHHC.UW.PolicyCenter.Infrastructure\BHHC.UW.PolicyCenter.Infrastructure.csproj" />
+    <ProjectReference Include="..\BHHC.UW.PolicyCenter.Infrastructure\HC.UW.PolicyCenter.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="HC.UW.PolicyCenter.Domain">
+      <HintPath>..\BHHC.UW.PolicyCenter.Domain\obj\Debug\net9.0\ref\HC.UW.PolicyCenter.Domain.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
