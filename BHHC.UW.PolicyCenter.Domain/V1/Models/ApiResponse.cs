@@ -12,5 +12,6 @@ namespace BHHC.UW.PolicyCenter.API.V1.Application.Models
 
         [JsonProperty("exceptions")]
         public ApiException Exception { get; set; }
+        public string ValidationMessage { get; set; }
     }
 }

@@ -1,4 +1,7 @@
+using BHHC.UW.PolicyCenter.API.V1.Application.Commands;
+using BHHC.UW.PolicyCenter.API.V1.Application.Queries;
 using BHHC.UW.PolicyCenter.API.V1.Mappings;
+using FluentValidation;
 using BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection; // Ensure this is included
@@ -27,6 +30,9 @@ builder.Services.AddScoped<System.Data.IDbConnection>(sp =>
 });
 // Configure Dapper Repository
 builder.Services.AddScoped<IStateRepository, StateRepository>();
+builder.Services.AddScoped<IValidator<GetPolicyStatesQuery>, HC.UW.PolicyCenter.API.V1.Validations.GetPolicyStatesQueryValidator>();
+builder.Services.AddScoped<IValidator<UpsertPolicyStateCommandRequest>, HC.UW.PolicyCenter.API.V1.Validations.UpsertPolicyStateCommandRequestValidator>();
+builder.Services.AddScoped<IValidator<GetAvailableStatesQuery>, HC.UW.PolicyCenter.API.V1.Validations.GetAvailableStatesQueryValidator>();
 
 // Configure MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));

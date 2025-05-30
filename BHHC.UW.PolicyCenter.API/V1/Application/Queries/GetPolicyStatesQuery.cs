@@ -6,7 +6,8 @@ namespace BHHC.UW.PolicyCenter.API.V1.Application.Queries
 {
     public class GetPolicyStatesQuery : IRequest<IEnumerable<UWStateDTO>>
     {
-        [Required(ErrorMessage = "MGA Code is required to retrieve policy states.")]
+        [Required(ErrorMessage = "MGA Code is required.")]
+        [StringLength(10, ErrorMessage = "MGA Code cannot be longer than 10 characters.")]
         public string MgaCode { get; set; }
     }
 }
