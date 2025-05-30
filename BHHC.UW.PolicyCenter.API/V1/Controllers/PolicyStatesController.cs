@@ -143,13 +143,13 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
         /// </summary>
         /// <param name="mgacode">The MgaCode (Policy ID) to filter available states.</param>
         /// <returns>A list of available states.</returns>
-        [HttpGet("{policyid}/statesavailable")]
+        [HttpGet("{policyId}/statesavailable")]
         [ProducesResponseType(typeof(IEnumerable<ReferenceStateDTO>), 200)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), 400)]
         [ProducesResponseType(typeof(WebApiExceptionResponseModel), (int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> GetAvailableStates([FromQuery] string mgacode)
+        public async Task<IActionResult> GetAvailableStates([FromQuery] string policyId)
         {
-            if (string.IsNullOrWhiteSpace(mgacode))
+            if (string.IsNullOrWhiteSpace(policyId))
             {
                 return BadRequest(new WebApiExceptionResponseModel
                 {
@@ -160,7 +160,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
 
             try
             {
-                var query = new GetAvailableStatesQuery { MgaCode = mgacode };
+                var query = new GetAvailableStatesQuery { MgaCode = policyId };
                 var states = await _mediator.Send(query);
                 return Ok(states);
             }
@@ -172,14 +172,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
                     ExceptionMessage = ex.Message,
                 });
             }
-            catch (HandledException ex)
-            {
-                return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
-                {
-                    ExceptionType = nameof(HandledException),
-                    ExceptionMessage = ex.Message,
-                });
-            }
+           
             catch (Exception ex)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
@@ -189,69 +182,5 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
                 });
             }
         }
-
-        /// <summary>
-        /// Retrieves a list of all available states for dropdowns based on policy-related data.
-        /// </summary>
-        /// <param name="mgacode">The MgaCode (Policy ID) to filter available states.</param>
-        /// <returns>A list of available states.</returns>
-        [HttpGet("{policyid}/statesavailable")]
-        [ProducesResponseType(typeof(IEnumerable<ReferenceStateDTO>), 200)]
-        [ProducesResponseType(typeof(WebApiExceptionResponseModel), 400)]
-        [ProducesResponseType(typeof(WebApiExceptionResponseModel), (int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> GetAvailableStates(
-            string policyid,
-            [FromQuery] string mgacode,
-            [FromServices] IValidator<GetAvailableStatesQuery> validator)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(mgacode))
-                {
-                    return Ok(new ApiResponse<ReferenceStateDTO>
-                    {
-                        Success = false,
-                        ValidationMessage = "MgaCode is required to retrieve available states."
-                    });
-                }
-
-                var query = new GetAvailableStatesQuery { MgaCode = mgacode };
-                var validationResult = await validator.ValidateAsync(query);
-                if (!validationResult.IsValid)
-                {
-                    string combinedErrors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
-                    return Ok(new ApiResponse<string>
-                    {
-                        Success = false,
-                        ValidationMessage = combinedErrors
-                    });
-                }
-
-                var states = await _mediator.Send(query);
-                return Ok(new ApiResponse<IEnumerable<ReferenceStateDTO>>
-                {
-                    Success = true,
-                    Result = states
-                });
-            }
-            catch (BusinessLogicException ex)
-            {
-                return BadRequest(new WebApiExceptionResponseModel
-                {
-                    ExceptionType = ex.GetType().Name,
-                    ExceptionMessage = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
-                {
-                    ExceptionType = ex.GetType().Name,
-                    ExceptionMessage = "An unexpected error occurred while retrieving available states."
-                });
-            }
-        }
-        //write fluent validation for the above code
-
     }
 }

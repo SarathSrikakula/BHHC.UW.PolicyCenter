@@ -100,6 +100,8 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
         [Fact]
         public async Task UpsertPolicyState_ReturnsSuccess_WhenValid()
         {
+            // Example usage of UpsertPolicyStateCommandRequest in a unit test
+            
             var validator = new Mock<IValidator<UpsertPolicyStateCommandRequest>>();
             validator.Setup(v => v.ValidateAsync(It.IsAny<UpsertPolicyStateCommandRequest>(), default))
                 .ReturnsAsync(new ValidationResult());
@@ -142,21 +144,79 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
         }
 
         [Fact]
-        public async Task GetAvailableStates_WithValidator_ReturnsStates_WhenValid()
+        public async Task UpsertPolicyState_ReturnsException_WhenMediatorThrows()
         {
-            var validator = new Mock<IValidator<GetAvailableStatesQuery>>();
-            validator.Setup(v => v.ValidateAsync(It.IsAny<GetAvailableStatesQuery>(), default))
+            var validator = new Mock<IValidator<UpsertPolicyStateCommandRequest>>();
+            validator.Setup(v => v.ValidateAsync(It.IsAny<UpsertPolicyStateCommandRequest>(), default))
                 .ReturnsAsync(new ValidationResult());
-            var states = new List<ReferenceStateDTO> { new ReferenceStateDTO { State = "CA", StateName = "California" } };
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), default)).ReturnsAsync(states);
+            var command = new UpsertPolicyStateCommand();
+            _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(It.IsAny<UpsertPolicyStateCommandRequest>())).Returns(command);
+            _mediatorMock.Setup(m => m.Send(command, default)).ThrowsAsync(new Exception("Unexpected error"));
             var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
 
-            var result = await controller.GetAvailableStates("123", "123", validator.Object);
+            var result = await controller.UpsertPolicyState(new UpsertPolicyStateCommandRequest(), validator.Object);
+
+            var okResult = Assert.IsType<ObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UpsertPolicyState_ReturnsValidationError_WhenRequestIsNull()
+        {
+            var validator = new Mock<IValidator<UpsertPolicyStateCommandRequest>>();
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+
+            var result = await controller.UpsertPolicyState(null, validator.Object);
+
+            var okResult = Assert.IsType<ObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task GetAvailableStates_ReturnsNotFound_WhenResultIsNull()
+        {
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), default)).ReturnsAsync((IEnumerable<ReferenceStateDTO>)null);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+
+            var result = await controller.GetAvailableStates("123");
+
+            var notFoundResult = Assert.IsType<OkObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UpsertPolicyState_UsesUpsertPolicyStateCommandRequest_WithValidProperties()
+        {
+            var validator = new Mock<IValidator<UpsertPolicyStateCommandRequest>>();
+            validator.Setup(v => v.ValidateAsync(It.IsAny<UpsertPolicyStateCommandRequest>(), default))
+                .ReturnsAsync(new ValidationResult());
+
+            var request = new UpsertPolicyStateCommandRequest
+            {
+                MgaCode = "MGA123",
+                StateBeginDate = new DateTime(2024, 1, 1),
+                StateTin = "TIN456",
+                RiskId = "RISK789",
+                State = "CA"
+            };
+
+            var command = new UpsertPolicyStateCommand
+            {
+                MgaCode = request.MgaCode,
+                StateBeginDate = request.StateBeginDate,
+                StateTin = request.StateTin,
+                RiskId = request.RiskId,
+                State = request.State
+            };
+
+            _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(It.IsAny<UpsertPolicyStateCommandRequest>())).Returns(command);
+            _mediatorMock.Setup(m => m.Send(command, default)).ReturnsAsync("Success");
+
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+
+            var result = await controller.UpsertPolicyState(request, validator.Object);
 
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var response = Assert.IsType<ApiResponse<IEnumerable<ReferenceStateDTO>>>(okResult.Value);
+            var response = Assert.IsType<ApiResponse<string>>(okResult.Value);
             Assert.True(response.Success);
-            Assert.Equal(states, response.Result);
+            Assert.Equal("Success", response.Result);
         }
     }
 }
