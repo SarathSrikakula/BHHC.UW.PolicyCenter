@@ -1,4 +1,5 @@
-﻿using BHHC.UW.PolicyCenter.API.V1.Application.Commands;
+﻿using app_uwpolicicenter.Models.PolicyStateModels;
+using BHHC.UW.PolicyCenter.API.V1.Application.Commands;
 using BHHC.UW.PolicyCenter.API.V1.Application.Models;
 using BHHC.UW.PolicyCenter.Domain.V1.Models.DTOs;
 using Microsoft.Extensions.Options;
@@ -10,17 +11,21 @@ namespace app_uwpolicicenter.ServiceClients
     {
         private readonly ILogger<PolicyCenterServiceClient> _logger;
         private readonly string _policyDetailURL;
+        private readonly IConfiguration _configuration;
+        private readonly PolicyStatesApiPaths _apiPaths;
 
         public PolicyCenterServiceClient(
             ILogger<PolicyCenterServiceClient> logger,
             IOptions<MicroServiceBaseURLCollection> microServiceBaseURLCollection,
             IHttpContextAccessor httpContextAccessor,
             IConfiguration configuration,
-            string microServiceName = "UW.PolicyCenter.Api"
+            string microServiceName = "UW.PolicyCenter.Api",
+            IOptions<PolicyStatesApiPaths> apiPaths
         ) : base(microServiceBaseURLCollection, httpContextAccessor, configuration, microServiceName)
         {
             _logger = logger;
-            _policyDetailURL = configuration["APIPaths:PolicyHeaderInfoGetURL"];
+            _configuration = configuration;
+            _apiPaths = apiPaths.Value;
         }
 
         // Example service call method for GetPolicyStates (GET)
@@ -28,7 +33,7 @@ namespace app_uwpolicicenter.ServiceClients
         {
             try
             {
-                var response = await GetAsync<ApiResponse<IEnumerable<UWStateDTO>>>("api/policy/policystates?policyId=" + policyId, null);
+                var response = await GetAsync<ApiResponse<IEnumerable<UWStateDTO>>>(_apiPaths.PolicyStatesGetURL + policyId, null);
                 return response;
             }
             catch (Exception ex)
@@ -43,7 +48,7 @@ namespace app_uwpolicicenter.ServiceClients
         {
             try
             {
-                var response = await PostAsync<ApiResponse<string>>("api/policy/states", request,null);
+                var response = await PostAsync<ApiResponse<string>>(_apiPaths.PolicyStateUpsertURL, request,null);
                 return response;
             }
             catch (Exception ex)
@@ -60,7 +65,7 @@ namespace app_uwpolicicenter.ServiceClients
         {
             try
             {
-                var response = await GetAsync<IEnumerable<ReferenceStateDTO>>("api/policy/availablestates?policyId=" + policyId, null);
+                var response = await GetAsync<IEnumerable<ReferenceStateDTO>>(_apiPaths.AvailableStatesGetURL + policyId, null);
                 return response;
             }
             catch (Exception ex)
