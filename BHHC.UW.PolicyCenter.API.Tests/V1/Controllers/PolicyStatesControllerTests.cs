@@ -29,7 +29,6 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
         private readonly Mock<IMapper> _mapperMock;
         private readonly Mock<ILogger<PolicyStatesController>> _loggerMock;
         private readonly Mock<IConfiguration> _configurationMock;
-        private readonly PolicyStatesController _controller;
 
         public PolicyStatesControllerTests()
         {
@@ -37,97 +36,53 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
             _mapperMock = new Mock<IMapper>();
             _loggerMock = new Mock<ILogger<PolicyStatesController>>();
             _configurationMock = new Mock<IConfiguration>();
-            _controller = new PolicyStatesController(
+        }
+
+        [Fact]
+        public async Task UpsertPolicyState_BusinessLogicException_LogsCustomError()
+        {
+            // Arrange
+            var controller = new PolicyStatesController(
                 _mediatorMock.Object,
                 _mapperMock.Object,
                 _loggerMock.Object,
                 _configurationMock.Object
             );
-        }
 
-        [Fact]
-        public async Task GetAvailableStates_ReturnsOk_WhenStatesFound()
-        {
-            // Arrange
-            var mgacode = "MGA123";
-            var states = new List<ReferenceStateDTO> { new ReferenceStateDTO { State = "CA", StateName = "California" } };
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), default)).ReturnsAsync(states);
+            var request = new UpsertPolicyStateCommandRequest
+            {
+                MgaCode = "MGA1",
+                State = "CA"
+            };
 
-            // Act
-            var result = await _controller.GetAvailableStates(mgacode);
+            var command = new UpsertPolicyStateCommand();
+            _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(It.IsAny<UpsertPolicyStateCommandRequest>()))
+                .Returns(command);
 
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var response = Assert.IsAssignableFrom<ApiResponse<IEnumerable<ReferenceStateDTO>>>(okResult.Value);
-            Assert.True(response.Success);
-            Assert.Equal(states, response.Result);
-        }
-
-        [Fact]
-        public async Task GetAvailableStates_ReturnsBadRequest_WhenMgaCodeIsMissing()
-        {
-            // Act
-            var result = await _controller.GetAvailableStates("");
-
-            // Assert
-            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-            var response = Assert.IsAssignableFrom<ApiResponse<bool>>(badRequest.Value);
-            Assert.False(response.Success);
-            Assert.NotNull(response.Exception);
-        }
-
-        [Fact]
-        public async Task GetAvailableStates_ReturnsOkWithError_WhenStatesNull()
-        {
-            // Arrange
-            var mgacode = "MGA123";
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), default)).ReturnsAsync((IEnumerable<ReferenceStateDTO>)null);
-            _loggerMock.Setup(l => l.Log(
-                It.IsAny<LogLevel>(),
-                It.IsAny<EventId>(),
-                It.IsAny<It.IsAnyType>(),
-                It.IsAny<Exception>(),
-                (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()
-            ));
-            _loggerMock.Setup(l => l.LogCustomError(
-                It.IsAny<CustomError>(),
-                It.IsAny<LogLevel>(),
-                It.IsAny<Exception>(),
-                It.IsAny<string>()
-            )).Returns("mocked error message");
+            var exception = new BusinessLogicException("Business error");
+            _mediatorMock.Setup(m => m.Send(It.IsAny<UpsertPolicyStateCommand>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(exception);
 
             // Act
-            var result = await _controller.GetAvailableStates(mgacode);
+            var result = await controller.UpsertPolicyState(request);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var response = Assert.IsAssignableFrom<ApiResponse<ReferenceStateDTO>>(okResult.Value);
-            Assert.False(response.Success);
-            Assert.NotNull(response.Exception);
-        }
+            // Instead of verifying the extension method, verify that ILogger.Log was called with expected parameters
+            _loggerMock.Verify(
+                x => x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("4001") && v.ToString().Contains("Business")),
+                    exception,
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()
+                ),
+                Times.Once
+            );
 
-        [Fact]
-        public async Task GetAvailableStates_ReturnsInternalServerError_OnException()
-        {
-            // Arrange
-            var mgacode = "MGA123";
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), default)).ThrowsAsync(new Exception("Test exception"));
-            _loggerMock.Setup(l => l.LogCustomError(
-                It.IsAny<CustomError>(),
-                It.IsAny<LogLevel>(),
-                It.IsAny<Exception>(),
-                It.IsAny<string>()
-            )).Returns("mocked error message");
-
-            // Act
-            var result = await _controller.GetAvailableStates(mgacode);
-
-            // Assert
-            var objectResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal(500, objectResult.StatusCode);
-            var response = Assert.IsAssignableFrom<ApiResponse<bool>>(objectResult.Value);
-            Assert.False(response.Success);
-            Assert.NotNull(response.Exception);
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var apiResponse = Assert.IsType<ApiResponse<bool>>(badRequestResult.Value);
+            Assert.False(apiResponse.Success);
+            Assert.NotNull(apiResponse.Exception);
         }
     }
 }

@@ -134,6 +134,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
                     LogLevel.Warning,
                     ex,
                     nameof(UpsertPolicyState)
+                //Please write unit test for above LogCustomError remeber it is ana extension method
                 );
 
                 return BadRequest(new ApiResponse<bool>
