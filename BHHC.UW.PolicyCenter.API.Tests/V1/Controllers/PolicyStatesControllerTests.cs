@@ -9,6 +9,8 @@ using FluentValidation;
 using FluentValidation.Results;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -26,18 +28,22 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
     {
         private readonly Mock<IMediator> _mediatorMock;
         private readonly Mock<IMapper> _mapperMock;
+        private readonly Mock<IConfiguration> _configMock;
+        private readonly Mock<ILogger<PolicyStatesController>> _loggerMock;
 
         public PolicyStatesControllerTests()
         {
             _mediatorMock = new Mock<IMediator>();
             _mapperMock = new Mock<IMapper>();
+            _configMock = new Mock<IConfiguration>();
+            _loggerMock = new Mock<ILogger<PolicyStatesController>>();
         }
 
         [Fact]
         public async Task GetPolicyStates_ReturnsValidationError_WhenPolicyIdIsEmpty()
         {
             var validator = new Mock<IValidator<GetPolicyStatesQuery>>();
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.GetPolicyStates("", validator.Object);
 
@@ -53,7 +59,7 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
             var validator = new Mock<IValidator<GetPolicyStatesQuery>>();
             validator.Setup(v => v.ValidateAsync(It.IsAny<GetPolicyStatesQuery>(), default))
                 .ReturnsAsync(new ValidationResult(new[] { new ValidationFailure("MgaCode", "Error") }));
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.GetPolicyStates("123", validator.Object);
 
@@ -71,7 +77,7 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
                 .ReturnsAsync(new ValidationResult());
             var states = new List<UWStateDTO> { new UWStateDTO { MgaCode = "123", State = "CA" } };
             _mediatorMock.Setup(m => m.Send(It.IsAny<GetPolicyStatesQuery>(), default)).ReturnsAsync(states);
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.GetPolicyStates("123", validator.Object);
 
@@ -87,7 +93,7 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
             var validator = new Mock<IValidator<UpsertPolicyStateCommandRequest>>();
             validator.Setup(v => v.ValidateAsync(It.IsAny<UpsertPolicyStateCommandRequest>(), default))
                 .ReturnsAsync(new ValidationResult(new[] { new ValidationFailure("MgaCode", "Error") }));
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.UpsertPolicyState(new UpsertPolicyStateCommandRequest(), validator.Object);
 
@@ -100,15 +106,13 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
         [Fact]
         public async Task UpsertPolicyState_ReturnsSuccess_WhenValid()
         {
-            // Example usage of UpsertPolicyStateCommandRequest in a unit test
-            
             var validator = new Mock<IValidator<UpsertPolicyStateCommandRequest>>();
             validator.Setup(v => v.ValidateAsync(It.IsAny<UpsertPolicyStateCommandRequest>(), default))
                 .ReturnsAsync(new ValidationResult());
             var command = new UpsertPolicyStateCommand();
             _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(It.IsAny<UpsertPolicyStateCommandRequest>())).Returns(command);
             _mediatorMock.Setup(m => m.Send(command, default)).ReturnsAsync("Success");
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.UpsertPolicyState(new UpsertPolicyStateCommandRequest(), validator.Object);
 
@@ -121,7 +125,7 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
         [Fact]
         public async Task GetAvailableStates_ReturnsBadRequest_WhenMgaCodeIsEmpty()
         {
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.GetAvailableStates("");
 
@@ -135,7 +139,7 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
         {
             var states = new List<ReferenceStateDTO> { new ReferenceStateDTO { State = "CA", StateName = "California" } };
             _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), default)).ReturnsAsync(states);
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.GetAvailableStates("123");
 
@@ -152,7 +156,7 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
             var command = new UpsertPolicyStateCommand();
             _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(It.IsAny<UpsertPolicyStateCommandRequest>())).Returns(command);
             _mediatorMock.Setup(m => m.Send(command, default)).ThrowsAsync(new Exception("Unexpected error"));
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.UpsertPolicyState(new UpsertPolicyStateCommandRequest(), validator.Object);
 
@@ -163,7 +167,7 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
         public async Task UpsertPolicyState_ReturnsValidationError_WhenRequestIsNull()
         {
             var validator = new Mock<IValidator<UpsertPolicyStateCommandRequest>>();
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.UpsertPolicyState(null, validator.Object);
 
@@ -174,7 +178,7 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
         public async Task GetAvailableStates_ReturnsNotFound_WhenResultIsNull()
         {
             _mediatorMock.Setup(m => m.Send(It.IsAny<GetAvailableStatesQuery>(), default)).ReturnsAsync((IEnumerable<ReferenceStateDTO>)null);
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.GetAvailableStates("123");
 
@@ -209,7 +213,7 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Controllers
             _mapperMock.Setup(m => m.Map<UpsertPolicyStateCommand>(It.IsAny<UpsertPolicyStateCommandRequest>())).Returns(command);
             _mediatorMock.Setup(m => m.Send(command, default)).ReturnsAsync("Success");
 
-            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object);
+            var controller = new PolicyStatesController(_mediatorMock.Object, _mapperMock.Object, _loggerMock.Object, _configMock.Object);
 
             var result = await controller.UpsertPolicyState(request, validator.Object);
 

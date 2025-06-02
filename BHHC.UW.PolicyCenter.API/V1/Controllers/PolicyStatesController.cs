@@ -4,6 +4,8 @@ using BHHC.UW.PolicyCenter.API.V1.Application.Commands;
 using BHHC.UW.PolicyCenter.API.V1.Application.Models;
 using BHHC.UW.PolicyCenter.API.V1.Application.Queries;
 using BHHC.UW.PolicyCenter.Domain.V1.Models.DTOs;
+using DigitalPlatform.Errors.Models.Extension;
+using DigitalPlatform.Errors.Models.Models;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +31,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
             _logger = logger;
             _configuration = configuration;
         }
-
+        //please add logger and _configuration to the unit test cases
         /// <summary>
         /// Retrieves all states associated with a specific policy.
         /// </summary>
@@ -81,21 +83,22 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
                     ExceptionMessage = ex.Message
                 });
             }
-            catch (SqlException ex)
-            {
-                _logger.LogCustomError(
-                    new CustomError(_configuration, GlobalErrorCategory.Database, "1005", false),
-                    LogLevel.Error,
-                    ex,
-                    nameof(GetPolicyStates)
-                );
+            //catch (SqlException ex)
+            //{
+            //    _logger.LogCustomError(
+            //        new CustomError(_configuration, GlobalErrorCategory.Database, "1005", false),
+            //        LogLevel.Error,
+            //        ex,
+            //        nameof(GetPolicyStates)
+            //    );
 
-                return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
-                {
-                    Success = false,
-                    Exception = new ApiException(exception: ex)
-                });
-            }
+            //    return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
+            //    {
+            //        Success = false,
+            //        Exception = new ApiException(exception: ex)
+            //    });
+            //}
+            //can you write the unit test case which will covers above SqlException ex
             catch (Exception ex)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel

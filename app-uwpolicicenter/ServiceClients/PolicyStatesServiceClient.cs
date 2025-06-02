@@ -19,8 +19,8 @@ namespace app_uwpolicicenter.ServiceClients
             IOptions<MicroServiceBaseURLCollection> microServiceBaseURLCollection,
             IHttpContextAccessor httpContextAccessor,
             IConfiguration configuration,
-            string microServiceName = "UW.PolicyCenter.Api",
-            IOptions<PolicyStatesApiPaths> apiPaths
+            IOptions<PolicyStatesApiPaths> apiPaths,
+            string microServiceName = "UW.PolicyCenter.Api"
         ) : base(microServiceBaseURLCollection, httpContextAccessor, configuration, microServiceName)
         {
             _logger = logger;

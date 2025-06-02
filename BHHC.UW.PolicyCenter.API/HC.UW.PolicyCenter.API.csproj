@@ -25,6 +25,7 @@
     <ProjectReference Include="..\BHHC.UW.PolicyCenter.Domain\BHHC.UW.PolicyCenter.Domain.csproj" />
     <ProjectReference Include="..\BHHC.UW.PolicyCenter.Infrastructure\BHHC.UW.PolicyCenter.Infrastructure.csproj" />
     <ProjectReference Include="..\BHHC.UW.PolicyCenter.Infrastructure\HC.UW.PolicyCenter.Infrastructure.csproj" />
+    <ProjectReference Include="..\DigitalPlatform.Errors.Models\DigitalPlatform.Errors.Models.csproj" />
   </ItemGroup>
 
   <ItemGroup>
