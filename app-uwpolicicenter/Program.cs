@@ -21,3 +21,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+//please add all the configuration and service registrations for controller,client here for the classes we have created 
