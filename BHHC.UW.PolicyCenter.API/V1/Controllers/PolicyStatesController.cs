@@ -7,6 +7,7 @@ using BHHC.UW.PolicyCenter.Domain.V1.Models.DTOs;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using System.Net;
 using static BHHC.UW.PolicyCenter.API.PolicyCenterException.HandledException;
 
@@ -78,6 +79,21 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
                 {
                     ExceptionType = ex.GetType().Name,
                     ExceptionMessage = ex.Message
+                });
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogCustomError(
+                    new CustomError(_configuration, GlobalErrorCategory.Database, "1005", false),
+                    LogLevel.Error,
+                    ex,
+                    nameof(GetPolicyStates)
+                );
+
+                return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
+                {
+                    Success = false,
+                    Exception = new ApiException(exception: ex)
                 });
             }
             catch (Exception ex)
