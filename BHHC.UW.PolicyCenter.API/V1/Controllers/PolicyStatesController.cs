@@ -18,11 +18,15 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
     {
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
+        private readonly ILogger<PolicyStatesController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public PolicyStatesController(IMediator mediator, IMapper mapper)
+        public PolicyStatesController(IMediator mediator, IMapper mapper, ILogger<PolicyStatesController> logger, IConfiguration configuration)
         {
             _mediator = mediator;
             _mapper = mapper;
+            _logger = logger;
+            _configuration = configuration;
         }
 
         /// <summary>
