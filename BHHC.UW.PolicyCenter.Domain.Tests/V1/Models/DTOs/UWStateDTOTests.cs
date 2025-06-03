@@ -10,7 +10,7 @@ namespace BHHC.UW.PolicyCenter.Domain.Tests.V1.Models.DTOs
         [Fact]
         public void Properties_AreSetCorrectly()
         {
-            var dto = new UWStateDTO { State = "CA", StateName = "California" };
+            var dto = new PolicyAssignedStatesDTO { State = "CA", StateName = "California" };
             Assert.Equal("CA", dto.State);
             Assert.Equal("California", dto.StateName);
         }

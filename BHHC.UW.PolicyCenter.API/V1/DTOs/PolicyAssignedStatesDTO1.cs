@@ -9,13 +9,13 @@ namespace BHHC.UW.PolicyCenter.Domain.V1.Models.DTOs
     // Models/UWStateDTO.cs
     // This is the DTO (Data Transfer Object) for API responses for policy states.
     // Renamed to UWStateDTO for clarity.
-    public class UWStateDTO
+    public class PolicyAssignedStatesDTO1
     {
-        public string MgaCode { get; set; }
+        public string PolicyCode { get; set; }
         public string State { get; set; }
-        public DateTime BeginDate { get; set; }
-        public string StateTin { get; set; }
-        public string RiskId { get; set; }
+        public DateTime StateEffectiveDate { get; set; }
+        public string StateEmployerCode { get; set; }
+        public string BureauId { get; set; }
         public string StateName { get; set; }
     }
 }

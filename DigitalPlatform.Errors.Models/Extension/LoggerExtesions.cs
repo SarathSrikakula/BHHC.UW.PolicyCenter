@@ -19,7 +19,7 @@ namespace DigitalPlatform.Errors.Models.Extension
         /// <param name="exception">The exception to log.</param>
         /// <param name="methodName">The method name where the error occurred.</param>
         /// <returns>A formatted error string for client response.</returns>
-        public static string LogCustomError(this ILogger logger, CustomError customError, LogLevel logLevel, Exception exception, string methodName)
+        public static string LogCustomError(this ILogger logger, CustomError customError, LogLevel logLevel, Exception exception, string methodName, object value)
         {
             var errorDescription = customError.IncludeErrorDescription
                 ? $"{customError.ErrorCategory}: {customError.AppErrorCode} - {exception.Message}"

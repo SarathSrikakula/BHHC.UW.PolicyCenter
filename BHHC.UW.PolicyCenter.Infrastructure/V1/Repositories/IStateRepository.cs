@@ -10,8 +10,8 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
 {
     public interface IStateRepository
     {
-        Task<IEnumerable<UWStateEntity>> GetPolicyStatesAsync(string mgaCode);
-        Task<IEnumerable<ReferenceStateDTO>> GetAllAvailableStatesAsync(string mgacode); // Added mgacode parameter
+        Task<IEnumerable<PolicyAssignedStatesDTO>> GetPolicyStatesAsync(string mgaCode);
+        Task<IEnumerable<PolicyAvailableStatesDTO>> GetAllAvailableStatesAsync(string mgacode); // Added mgacode parameter
         Task<string> UpsertPolicyStateAsync(UWStateEntity uwStateEntity);
     }
 }

@@ -2,7 +2,10 @@
 using BHHC.UW.PolicyCenter.Domain.V1.EntityModels;
 using BHHC.UW.PolicyCenter.Domain.V1.Models.DTOs;
 using Dapper;
+using DigitalPlatform.Errors.Models.Extension;
+using DigitalPlatform.Errors.Models.Models;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -18,14 +21,18 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
     {
         private readonly IDbConnection _dbConnection;
         private readonly ILogger<StateRepository> _logger;
+        private readonly IConfiguration _configuration;
+        private readonly AutoMapper.IMapper _mapper; 
 
-        public StateRepository(IDbConnection dbConnection, ILogger<StateRepository> logger)
+        public StateRepository(IDbConnection dbConnection, ILogger<StateRepository> logger, IConfiguration configuration, AutoMapper.IMapper mapper)
         {
             _dbConnection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
-            _logger = logger;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper)); // Initialize _mapper
         }
 
-        public async Task<IEnumerable<UWStateEntity>> GetPolicyStatesAsync(string mgaCode)
+        public async Task<IEnumerable<PolicyAssignedStatesDTO>> GetPolicyStatesAsync(string mgaCode)
         {
             try
             {
@@ -33,28 +40,28 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
                 parameters.Add("@mgacode", mgaCode, DbType.AnsiString, size: 10);
                 parameters.Add("@excludeOffPolicy", 'Y', DbType.AnsiString, size: 1);
 
-                var results = await _dbConnection.QueryAsync<UWStateEntity>(
+                var entityStates = await _dbConnection.QueryAsync<UWStateEntity>( // Fix the missing 'entityStates'
                     "up_uw_listpolicyRatingStates",
                     parameters,
                     commandType: CommandType.StoredProcedure
                 );
 
-                //instead of the above commented code please use the create the model with sql params and use it.
-                return results;
+                return _mapper.Map<IEnumerable<PolicyAssignedStatesDTO>>(entityStates); 
             }
             catch (SqlException ex)
             {
-                _logger.LogError(ex, "Database error in GetPolicyStatesAsync for MgaCode: {MgaCode}", mgaCode);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An unexpected error occurred in GetPolicyStatesAsync for MgaCode: {MgaCode}", mgaCode);
+                var errorMessage = _logger.LogCustomError(
+                   new CustomError(_configuration, GlobalErrorCategory.Unhandled, "Database error in GetPolicyStatesAsync for MgaCode: {MgaCode}", false),
+                   LogLevel.Error,
+                   ex,
+                   nameof(GetPolicyStatesAsync),
+                   null
+               );
                 throw;
             }
         }
         //can you  write unit test case for above code
-        public async Task<IEnumerable<ReferenceStateDTO>> GetAllAvailableStatesAsync(string mgacode)
+        public async Task<IEnumerable<PolicyAvailableStatesDTO>> GetAllAvailableStatesAsync(string mgacode)
         {
             try
             {
@@ -103,11 +110,18 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
                 // Example: await _dbConnection.ExecuteAsync(validationQuery, new { Agency = insuredInfo.Agency, PoBegin = insuredInfo.PoBegin, Carrier = insuredInfo.Carrier, P_OR_C = fnPorC });
 
                 var query = "select distinct names, vals from @hasRates";
-                return await _dbConnection.QueryAsync<ReferenceStateDTO>(query);
+                var entityStates= await _dbConnection.QueryAsync<ReferenceStateEntity>(query);
+                return _mapper.Map<IEnumerable<PolicyAvailableStatesDTO>>(entityStates);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unexpected error occurred in GetAllAvailableStatesAsync for dropdown, MgaCode: {MgaCode}", mgacode);
+                var errorMessage = _logger.LogCustomError(
+                   new CustomError(_configuration, GlobalErrorCategory.Unhandled, "An unexpected error occurred in GetAllAvailableStatesAsync for dropdown, MgaCode: {MgaCode}", false),
+                   LogLevel.Error,
+                   ex,
+                   nameof(GetAllAvailableStatesAsync),
+                   null
+               );
                 throw;
             }
         }
@@ -150,10 +164,17 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
             }
             catch (SqlException ex)
             {
-                _logger.LogError(ex, "Database error in UpsertPolicyStateAsync for MgaCode: {MgaCode}, State: {State}", uwStateEntity.MgaCode, uwStateEntity.State);
+                var errorMessage = _logger.LogCustomError(
+                   new CustomError(_configuration, GlobalErrorCategory.Unhandled, "An unexpected error occurred in GetAllAvailableStatesAsync for dropdown, MgaCode: {MgaCode}", false),
+                   LogLevel.Error,
+                   ex,
+                   nameof(UpsertPolicyStateAsync),
+                   null
+               );
                 throw;
             }
         }
+        //as we have changed the code please modify unit test cases for the above code the fixes are modifying the constructor params and the additional mapping and changed return type
     }
 }
 

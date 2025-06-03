@@ -4,6 +4,7 @@
 </ItemGroup>
 <ItemGroup>
   <ProjectReference Include="..\BHHC.UW.PolicyCenter.Domain\BHHC.UW.PolicyCenter.Domain.csproj" />
+  <ProjectReference Include="..\DigitalPlatform.Errors.Models\DigitalPlatform.Errors.Models.csproj" />
 </ItemGroup>
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -12,6 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="MediatR" Version="12.5.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />

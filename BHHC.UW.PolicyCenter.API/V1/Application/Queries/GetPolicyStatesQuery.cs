@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BHHC.UW.PolicyCenter.API.V1.Application.Queries
 {
-    public class GetPolicyStatesQuery : IRequest<IEnumerable<UWStateDTO>>
+    public class GetPolicyStatesQuery : IRequest<IEnumerable<PolicyAssignedStatesDTO1>>
     {
         [Required(ErrorMessage = "MGA Code is required.")]
         [StringLength(10, ErrorMessage = "MGA Code cannot be longer than 10 characters.")]

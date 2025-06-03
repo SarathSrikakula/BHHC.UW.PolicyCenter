@@ -5,6 +5,7 @@ using AutoMapper;
 using BHHC.UW.PolicyCenter.API.V1.Application.Commands;
 using BHHC.UW.PolicyCenter.Domain.V1.EntityModels;
 using BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -16,13 +17,15 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Application.Commands
         private readonly Mock<ILogger<UpsertPolicyStateHandler>> _loggerMock;
         private readonly Mock<IMapper> _mapperMock;
         private readonly UpsertPolicyStateHandler _handler;
+        private readonly Mock<IConfiguration> _configurationMock;
 
         public UpsertPolicyStateHandlerTests()
         {
             _stateRepositoryMock = new Mock<IStateRepository>();
             _loggerMock = new Mock<ILogger<UpsertPolicyStateHandler>>();
             _mapperMock = new Mock<IMapper>();
-            _handler = new UpsertPolicyStateHandler(_stateRepositoryMock.Object, _loggerMock.Object, _mapperMock.Object);
+            _configurationMock = new Mock<IConfiguration>();
+            _handler = new UpsertPolicyStateHandler(_stateRepositoryMock.Object, _loggerMock.Object, _mapperMock.Object, _configurationMock.Object);
         }
 
         [Fact]
