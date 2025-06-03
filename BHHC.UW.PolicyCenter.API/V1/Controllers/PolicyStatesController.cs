@@ -83,22 +83,6 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
                     ExceptionMessage = ex.Message
                 });
             }
-            //catch (SqlException ex)
-            //{
-            //    _logger.LogCustomError(
-            //        new CustomError(_configuration, GlobalErrorCategory.Database, "1005", false),
-            //        LogLevel.Error,
-            //        ex,
-            //        nameof(GetPolicyStates)
-            //    );
-
-            //    return StatusCode((int)HttpStatusCode.InternalServerError, new ApiResponse<bool>
-            //    {
-            //        Success = false,
-            //        Exception = new ApiException(exception: ex)
-            //    });
-            //}
-            //can you write the unit test case which will covers above SqlException ex
             catch (Exception ex)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, new WebApiExceptionResponseModel
