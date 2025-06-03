@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BHHC.UW.PolicyCenter.API.V1.Application.Commands;
 using BHHC.UW.PolicyCenter.Domain.V1.EntityModels;
 using BHHC.UW.PolicyCenter.Domain.V1.Models.DTOs;
 using BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories;
@@ -145,10 +146,6 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.Tests.V1.Repositories
             Assert.NotNull(mappedStates);
         }
 
-
-
-
-
         [Fact]
         public async Task UpsertPolicyStateAsync_ReturnsRMessage()
         {
@@ -163,6 +160,15 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.Tests.V1.Repositories
                 ST_Tin = "TIN123",
                 RiskId = "RISK001"
             };
+            var upsertPolicyState = new UpsertPolicyState
+            {
+                MgaCode = "MGATEST",
+                State = "CA",
+                StateBeginDate = DateTime.UtcNow,
+                StateTin = "TIN123",
+                RiskId = "RISK001"
+            };
+            _mapperMock.Setup(m => m.Map<UWStateEntity>(upsertPolicyState)).Returns(uwStateEntity);
 
             var resetRatingParameters = new DynamicParameters();
             resetRatingParameters.Add("@MGACode", "MGATEST", DbType.AnsiString, size: 10);
@@ -175,7 +181,7 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.Tests.V1.Repositories
             var expectedMessage = "Success";
 
             // Act
-            var result = await _repository.UpsertPolicyStateAsync(uwStateEntity);
+            var result = await _repository.UpsertPolicyStateAsync(upsertPolicyState);
 
             // Assert
             Assert.Null(result);

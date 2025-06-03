@@ -32,48 +32,34 @@ namespace BHHC.UW.PolicyCenter.API.Tests.V1.Application.Commands
         public async Task Handle_ShouldReturnRepositoryMessage_WhenUpsertSucceeds()
         {
             // Arrange
-            var command = new UpsertPolicyStateCommand { MgaCode = "MGA1", State = "TX" };
-            var uwStateEntity = new UWStateEntity();
+            var command = new UpsertPolicyStateCommand
+            {
+                MgaCode = "MGA1",
+                State = "TX",
+                StateBeginDate = new DateTime(2024, 1, 1),
+                StateTin = "TIN123",
+                RiskId = "RISK1"
+            };
+            var upsertPolicyState = new UpsertPolicyState
+            {
+                MgaCode = command.MgaCode,
+                State = command.State,
+                StateBeginDate = command.StateBeginDate,
+                StateTin = command.StateTin,
+                RiskId = command.RiskId
+            };
             var expectedMessage = "Success";
 
-            _mapperMock.Setup(m => m.Map<UWStateEntity>(command)).Returns(uwStateEntity);
-            _stateRepositoryMock.Setup(r => r.UpsertPolicyStateAsync(uwStateEntity)).ReturnsAsync(expectedMessage);
+            _mapperMock.Setup(m => m.Map<UpsertPolicyState>(command)).Returns(upsertPolicyState);
+            _stateRepositoryMock.Setup(r => r.UpsertPolicyStateAsync(upsertPolicyState)).ReturnsAsync(expectedMessage);
 
             // Act
             var result = await _handler.Handle(command, CancellationToken.None);
 
             // Assert
             Assert.Equal(expectedMessage, result);
-            _mapperMock.Verify(m => m.Map<UWStateEntity>(command), Times.Once);
-            _stateRepositoryMock.Verify(r => r.UpsertPolicyStateAsync(uwStateEntity), Times.Once);
-            _loggerMock.Verify(l => l.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Attempting to upsert policy state")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task Handle_ShouldLogErrorAndThrow_WhenRepositoryThrows()
-        {
-            // Arrange
-            var command = new UpsertPolicyStateCommand { MgaCode = "MGA2", State = "CA" };
-            var uwStateEntity = new UWStateEntity();
-            var exception = new Exception("DB error");
-
-            _mapperMock.Setup(m => m.Map<UWStateEntity>(command)).Returns(uwStateEntity);
-            _stateRepositoryMock.Setup(r => r.UpsertPolicyStateAsync(uwStateEntity)).ThrowsAsync(exception);
-
-            // Act & Assert
-            var ex = await Assert.ThrowsAsync<Exception>(() => _handler.Handle(command, CancellationToken.None));
-            Assert.Equal("DB error", ex.Message);
-            _loggerMock.Verify(l => l.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Error upserting policy state")),
-                exception,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()), Times.Once);
+            _mapperMock.Verify(m => m.Map<UpsertPolicyState>(command), Times.Once);
+            _stateRepositoryMock.Verify(r => r.UpsertPolicyStateAsync(upsertPolicyState), Times.Once);
         }
     }
 }

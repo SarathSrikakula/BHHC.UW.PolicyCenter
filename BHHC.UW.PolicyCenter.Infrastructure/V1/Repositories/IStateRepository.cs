@@ -1,4 +1,5 @@
-﻿using BHHC.UW.PolicyCenter.Domain.V1.EntityModels;
+﻿using BHHC.UW.PolicyCenter.API.V1.Application.Commands;
+using BHHC.UW.PolicyCenter.Domain.V1.EntityModels;
 using BHHC.UW.PolicyCenter.Domain.V1.Models.DTOs;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,6 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
     {
         Task<IEnumerable<PolicyAssignedStatesDTO>> GetPolicyStatesAsync(string mgaCode);
         Task<IEnumerable<PolicyAvailableStatesDTO>> GetAllAvailableStatesAsync(string mgacode); // Added mgacode parameter
-        Task<string> UpsertPolicyStateAsync(UWStateEntity uwStateEntity);
+        Task<string> UpsertPolicyStateAsync(UpsertPolicyState uwStateEntity);
     }
 }

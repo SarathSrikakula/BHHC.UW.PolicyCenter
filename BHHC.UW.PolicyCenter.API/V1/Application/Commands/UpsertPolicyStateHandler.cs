@@ -31,8 +31,9 @@ namespace BHHC.UW.PolicyCenter.API.V1.Application.Commands
             try
             {
                 _logger.LogInformation("Attempting to upsert policy state for MgaCode: {MgaCode}, State: {State}", request.MgaCode, request.State);
-                var uwStateEntity = _mapper.Map<UWStateEntity>(request);
-                var rMessage = await _stateRepository.UpsertPolicyStateAsync(uwStateEntity);
+                var upsertPolicyState = _mapper.Map<UpsertPolicyState>(request);
+                var rMessage = await _stateRepository.UpsertPolicyStateAsync(upsertPolicyState);
+                //please create new object UpsertPolicyState same like
                 _logger.LogInformation("Upsert policy state operation completed for MgaCode: {MgaCode}, State: {State} with message: {RMessage}", request.MgaCode, request.State, rMessage);
                 return rMessage;
             }

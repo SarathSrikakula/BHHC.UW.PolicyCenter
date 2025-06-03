@@ -1,4 +1,5 @@
 ﻿using BHHC.UW.PolicyCenter.API.PolicyCenterException;
+using BHHC.UW.PolicyCenter.API.V1.Application.Commands;
 using BHHC.UW.PolicyCenter.Domain.V1.EntityModels;
 using BHHC.UW.PolicyCenter.Domain.V1.Models.DTOs;
 using Dapper;
@@ -126,12 +127,12 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
             }
         }
 
-        public async Task<string> UpsertPolicyStateAsync(UWStateEntity uwStateEntity)
+        public async Task<string> UpsertPolicyStateAsync(UpsertPolicyState upsertPolicyState)
         {
             try
             {
-                _logger.LogInformation("Executing query to retrieve ResetRating for Policy: {MgaCode}", uwStateEntity.MgaCode);
-                
+                _logger.LogInformation("Executing query to retrieve ResetRating for Policy: {MgaCode}", upsertPolicyState.MgaCode);
+                var uwStateEntity=_mapper.Map<UWStateEntity>(upsertPolicyState); 
                 //please convert the above code to dynamic parameters style
                 var resetRatingParameters = new DynamicParameters();
                 resetRatingParameters.Add("@MGACode", uwStateEntity.MgaCode, DbType.AnsiString, size: 10);
@@ -174,7 +175,7 @@ namespace BHHC.UW.PolicyCenter.Infrastructure.V1.Repositories
                 throw;
             }
         }
-        //as we have changed the code please modify unit test cases for the above code the fixes are modifying the constructor params and the additional mapping and changed return type
+        //add mapping for the above all method in MappingProfile.cs
     }
 }
 
