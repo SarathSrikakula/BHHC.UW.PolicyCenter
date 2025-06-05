@@ -55,7 +55,7 @@ namespace BHHC.UW.PolicyCenter.API.V1.Mappings
                 .ForMember(dest => dest.ST_Tin, opt => opt.MapFrom(src => src.StateTin))
                 .ForMember(dest => dest.RiskId, opt => opt.MapFrom(src => src.RiskId))
                 .ForMember(dest => dest.State, opt => opt.MapFrom(src => src.State))
-                .ForAllOtherMembers(opt => opt.Ignore());
+                //.ForAllOtherMembers(opt => opt.Ignore());
         }
     }
 }
