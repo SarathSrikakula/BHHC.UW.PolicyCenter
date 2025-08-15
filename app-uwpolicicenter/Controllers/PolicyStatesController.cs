@@ -99,7 +99,6 @@ namespace app_uwpolicicenter.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
-        //please write 3 tests for 500,400,exception for every  controller method above and make sure the objects are intialized fully so i will get unit test covering for models
     }
 }
 

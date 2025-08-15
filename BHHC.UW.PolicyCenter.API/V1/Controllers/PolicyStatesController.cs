@@ -10,6 +10,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using static BHHC.UW.PolicyCenter.API.PolicyCenterException.HandledException;
 
@@ -220,8 +221,36 @@ namespace BHHC.UW.PolicyCenter.API.V1.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, errorMessage);
             }
         }
+        //In the all the above catch blocks please call the below method utilize it whereever LogCustomError is used
+        [ExcludeFromCodeCoverage]
+        private IActionResult CreateErrorResponse<T>(Exception ex, int code, string errorCode, string methodName)
+        {
+            _logger.LogCustomError(
+                new CustomError(_configuration, GlobalErrorCategory.Unhandled, errorCode, false),
+                LogLevel.Error,
+                ex,
+                nameof(methodName));
+
+            return StatusCode(code, new ApiResponse<T>
+            {
+                Success = false,
+                Exception = new ApiException(exception: ex)
+            });
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 //PLEASE USE [FromServices] IValidator<UpsertPolicyStateCommandRequest> validator and it's validation logic in GetAvailableStates same like GetPolicyStates method.
 //[HttpGet]
 //[Route("GetPolicyHeaderInfo")]
